@@ -37,11 +37,13 @@ public class ChessBoard : MonoBehaviour
     private Camera _currentCamera;
     private Vector2Int _currentHover;
     Vector3 _bounds;
+    bool _isWhiteTurn;
     #endregion
     #endregion
     #region ENGINE
     private void Awake()
     {
+        _isWhiteTurn = true;
         GenerateAllTiles(_tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         SpawnAllPieces();
         PositionAllPieces();
@@ -228,7 +230,7 @@ public class ChessBoard : MonoBehaviour
         {
             if (_chessPieces[hitposition.x, hitposition.y] != null)
             {
-                if (true/*YOUR TURN*/)
+                if ((_chessPieces[hitposition.x, hitposition.y].team == Team.White&&_isWhiteTurn)|| (_chessPieces[hitposition.x, hitposition.y].team == Team.Black && !_isWhiteTurn))
                 {
                     _currentlyDragging = _chessPieces[hitposition.x, hitposition.y];
                     _availableMoves = _currentlyDragging.GetAvailableMoves(ref _chessPieces,TILE_COUNT_X,TILE_COUNT_Y);
@@ -303,6 +305,8 @@ public class ChessBoard : MonoBehaviour
         _chessPieces[previousPosition.x, previousPosition.y] = null;
 
         PositionSinglePiece(x, y);
+
+        _isWhiteTurn = !_isWhiteTurn;
         return true;
     }
     private Vector2Int LookupTileIndex(GameObject hitInfo)

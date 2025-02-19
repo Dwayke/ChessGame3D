@@ -74,8 +74,8 @@ public class Queen : ChessPiece
                 if (board[x, y].team != team)
                 {
                     r.Add(new(x, y));
-                    break;
                 }
+                break;
             }
         }
         //Top Left
@@ -90,8 +90,8 @@ public class Queen : ChessPiece
                 if (board[x, y].team != team)
                 {
                     r.Add(new(x, y));
-                    break;
                 }
+                break;
             }
         }
         //Bottom Right
@@ -106,8 +106,8 @@ public class Queen : ChessPiece
                 if (board[x, y].team != team)
                 {
                     r.Add(new(x, y));
-                    break;
                 }
+                break;
             }
         }
         //Bottom Left
@@ -122,8 +122,8 @@ public class Queen : ChessPiece
                 if (board[x, y].team != team)
                 {
                     r.Add(new(x, y));
-                    break;
                 }
+                break;
             }
         }
         return r;
