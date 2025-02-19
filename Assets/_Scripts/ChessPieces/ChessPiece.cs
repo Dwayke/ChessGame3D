@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ChessPiece : MonoBehaviour
@@ -10,10 +11,49 @@ public class ChessPiece : MonoBehaviour
     public Piece piece;
 
     private Vector3 _desiredPosition;
-    private Vector3 _desiredScale;
+    private Vector3 _desiredScale = Vector3.one;
+    #endregion
+    #region ENGINE
+    private void Update()
+    {
+        transform.position = Vector3.Lerp(transform.position,_desiredPosition,Time.deltaTime*10);
+        transform.localScale = Vector3.Lerp(transform.localScale,_desiredScale,Time.deltaTime*10);
+    }
     #endregion
     #region MEMBER
     //SMOOTH MOVEMENT
+    public virtual void SetPosition(Vector3 position, bool force = false)
+    {
+        _desiredPosition = position;
+        if (force)
+        {
+            transform.position = _desiredPosition;
+        }
+        else
+        {
+
+        }
+    }    
+    public virtual void SetScale(Vector3 scale, bool force = false)
+    {
+        _desiredScale = scale;
+        if (force)
+        {
+            transform.localScale = _desiredScale;
+        }
+        else
+        {
+
+        }
+    }
+    public virtual List<Vector2Int> GetAvailableMoves(ref ChessPiece[,] board, int tileCountX, int tileCountY)
+    {
+        List<Vector2Int> r = new();
+        return r;
+    }
+    #endregion
+    #region LOCAL
+
     #endregion
 }
 public enum Team

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -12,6 +13,12 @@ public class ChessBoard : MonoBehaviour
     [SerializeField] float _tileSize = 1;
     [SerializeField] Vector3 _boardCenter = Vector3.zero;
     [SerializeField] float _yOffset = 0;
+    [SerializeField] float _deathStartOffsetModifier = 9f;
+    [SerializeField] float _deathYOffsetModifier = 1.25f;
+    [SerializeField] float _deathDistanceOffsetModifier = 3;
+    [SerializeField] float _deathSize = 0.3f;
+    [SerializeField] float _deathSpacing = 0.3f;
+    [SerializeField] float _dragYOffset =1.5f;
     #endregion
     #region PREFABS
     [Header("Prefabs & Materials")]
@@ -21,6 +28,9 @@ public class ChessBoard : MonoBehaviour
     #region LOGIC
     private ChessPiece[,] _chessPieces;
     private ChessPiece _currentlyDragging;
+    private List<Vector2Int> _availableMoves = new();
+    private readonly List<ChessPiece> _deadWhites =new();
+    private readonly List<ChessPiece> _deadBlacks = new();
     private const int TILE_COUNT_X = 8;
     private const int TILE_COUNT_Y = 8;
     private GameObject[,] _tiles;
@@ -161,7 +171,7 @@ public class ChessBoard : MonoBehaviour
     {
         _chessPieces[x,y].currentX = x;
         _chessPieces[x,y].currentY = y;
-        _chessPieces[x,y].transform.position = GetTileCenter(x,y);
+        _chessPieces[x,y].SetPosition(GetTileCenter(x, y),force);
     }
     private Vector3 GetTileCenter(int x, int y)
     {
@@ -172,7 +182,7 @@ public class ChessBoard : MonoBehaviour
     private void CheckHoverStatus()
     {
         Ray ray = _currentCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit info, 100, LayerMask.GetMask("Tile", "Hover")))
+        if (Physics.Raycast(ray, out RaycastHit info, 100, LayerMask.GetMask("Tile", "Hover","Highlight")))
         {
             Vector2Int hitPosition = LookupTileIndex(info.transform.gameObject);
             if (_currentHover == -Vector2Int.one)
@@ -182,7 +192,7 @@ public class ChessBoard : MonoBehaviour
             }
             if (_currentHover != hitPosition)
             {
-                _tiles[_currentHover.x, _currentHover.y].layer = LayerMask.NameToLayer("Tile");
+                _tiles[_currentHover.x, _currentHover.y].layer = (ContainsValidMove(ref _availableMoves, _currentHover)) ? LayerMask.NameToLayer("Highlight") : LayerMask.NameToLayer("Tile");
                 _currentHover = hitPosition;
                 _tiles[hitPosition.x, hitPosition.y].layer = LayerMask.NameToLayer("Hover");
             }
@@ -192,8 +202,23 @@ public class ChessBoard : MonoBehaviour
         {
             if (_currentHover != -Vector2Int.one)
             {
-                _tiles[_currentHover.x, _currentHover.y].layer = LayerMask.NameToLayer("Tile");
+                _tiles[_currentHover.x, _currentHover.y].layer = (ContainsValidMove(ref _availableMoves,_currentHover)) ? LayerMask.NameToLayer("Highlight") : LayerMask.NameToLayer("Tile");
                 _currentHover = -Vector2Int.one;
+            }
+            if (_currentlyDragging && Input.GetMouseButtonUp(0)) 
+            {
+                _currentlyDragging.SetPosition(GetTileCenter(_currentlyDragging.currentX, _currentlyDragging.currentY));
+                _currentlyDragging = null;
+                RemoveHighlightTiles();
+            }
+        }
+
+        if (_currentlyDragging)
+        {
+            Plane horizontalPlane = new(Vector3.up, Vector3.up * _yOffset);
+            if (horizontalPlane.Raycast(ray, out float distance))
+            {
+                _currentlyDragging.SetPosition(ray.GetPoint(distance) + Vector3.up * _dragYOffset);
             }
         }
     }
@@ -206,6 +231,8 @@ public class ChessBoard : MonoBehaviour
                 if (true/*YOUR TURN*/)
                 {
                     _currentlyDragging = _chessPieces[hitposition.x, hitposition.y];
+                    _availableMoves = _currentlyDragging.GetAvailableMoves(ref _chessPieces,TILE_COUNT_X,TILE_COUNT_Y);
+                    HighlightTiles();
                 }
             }
         }
@@ -215,14 +242,40 @@ public class ChessBoard : MonoBehaviour
 
             bool validMove = MoveTo(_currentlyDragging, hitposition.x, hitposition.y);
             if (!validMove)
+                _currentlyDragging.SetPosition(GetTileCenter(previousPosition.x, previousPosition.y));
+            _currentlyDragging = null;
+            RemoveHighlightTiles();
+        }
+    }
+    private void HighlightTiles()
+    {
+        for (int i = 0; i < _availableMoves.Count; i++)
+        {
+            _tiles[_availableMoves[i].x, _availableMoves[i].y].layer = LayerMask.NameToLayer("Highlight");
+        }
+    }
+    private void RemoveHighlightTiles()
+    {
+        for (int i = 0; i < _availableMoves.Count; i++)
+        {
+            _tiles[_availableMoves[i].x, _availableMoves[i].y].layer = LayerMask.NameToLayer("Tile");
+        }
+        _availableMoves.Clear();
+    }
+    private bool ContainsValidMove(ref List<Vector2Int> moves,Vector2 pos)
+    {
+        for (int i = 0; i < moves.Count; i++) 
+        {
+            if (moves[i].x == pos.x && moves[i].y == pos.y)
             {
-                _currentlyDragging.transform.position = GetTileCenter(previousPosition.x, previousPosition.y);
-                _currentlyDragging = null;
+                return true;
             }
         }
+        return false;
     }
     private bool MoveTo(ChessPiece cp, int x, int y)
     {
+        if (!ContainsValidMove(ref _availableMoves, new Vector2(x, y))) return false;
         Vector2Int previousPosition = new(cp.currentX, cp.currentY);
 
         if (_chessPieces[x,y]!= null)
@@ -232,9 +285,17 @@ public class ChessBoard : MonoBehaviour
             {
                 return false;
             }
-            else
+            else if(ocp.team == Team.White)
             {
-
+                _deadWhites.Add(ocp);
+                ocp.SetScale(Vector3.one * _deathSize);
+                ocp.SetPosition(new Vector3(_deathStartOffsetModifier * _tileSize,_yOffset * _deathYOffsetModifier, -_deathDistanceOffsetModifier*_tileSize)-_bounds + new Vector3(_tileSize/2,0,_tileSize/2)+ (Vector3.left* _deathSpacing)*_deadWhites.Count);
+            }            
+            else if(ocp.team == Team.Black)
+            {
+                _deadBlacks.Add(ocp);
+                ocp.SetScale(Vector3.one * _deathSize);
+                ocp.SetPosition(new Vector3(-(_tileSize+1f), _yOffset* _deathYOffsetModifier,  _tileSize * (_deathStartOffsetModifier + 1f)) - _bounds + new Vector3(_tileSize / 2, 0, _tileSize / 2) + (Vector3.right * _deathSpacing) * _deadBlacks.Count);
             }
         }
 
