@@ -26,6 +26,8 @@ public class GameManager : MonoBehaviour
     private ChessPiece[,] _chessPieces;
     private ChessPiece _currentlyDragging;
     private List<Vector2Int> _availableMoves = new();
+    private ESpecialMove _eSpecialMove;
+    private List<Vector2Int[]> _moveList = new();
     private const int TILE_COUNT_X = 8;
     private const int TILE_COUNT_Y = 8;
     private GameObject[,] _tiles;
@@ -67,11 +69,11 @@ public class GameManager : MonoBehaviour
     }
     #endregion
     #region MEMBER METHODS
-    public void CheckMate(Team winner)
+    public void CheckMate(ETeam winner)
     {
         DisplayVictory(winner);
     }
-    public void DisplayVictory(Team winner)
+    public void DisplayVictory(ETeam winner)
     {
         _victoryScreen.SetActive(true);
         _victoryText.text = winner.ToString() + " Team Won!";
@@ -83,7 +85,8 @@ public class GameManager : MonoBehaviour
         _victoryText.text = "";
         //FieldReset
         _currentlyDragging = null;
-        _availableMoves = new();
+        _availableMoves.Clear();
+        _moveList.Clear();
         //CleanUp
         for (int x = 0; x < TILE_COUNT_X; x++)
         {
@@ -171,36 +174,36 @@ public class GameManager : MonoBehaviour
     {
         _chessPieces = new ChessPiece[TILE_COUNT_Y, TILE_COUNT_Y];
         #region WHITE
-        _chessPieces[0, 0] = SpawnSinglePiece(Piece.Rook, Team.White,     _skins.whitePlayerSkin);
-        _chessPieces[1, 0] = SpawnSinglePiece(Piece.Knight, Team.White,   _skins.whitePlayerSkin);
-        _chessPieces[2, 0] = SpawnSinglePiece(Piece.Bishop, Team.White,   _skins.whitePlayerSkin);
-        _chessPieces[3, 0] = SpawnSinglePiece(Piece.Queen, Team.White,    _skins.whitePlayerSkin);
-        _chessPieces[4, 0] = SpawnSinglePiece(Piece.King, Team.White,     _skins.whitePlayerSkin);
-        _chessPieces[5, 0] = SpawnSinglePiece(Piece.Bishop, Team.White,   _skins.whitePlayerSkin);
-        _chessPieces[6, 0] = SpawnSinglePiece(Piece.Knight, Team.White,   _skins.whitePlayerSkin);
-        _chessPieces[7, 0] = SpawnSinglePiece(Piece.Rook, Team.White,     _skins.whitePlayerSkin);
+        _chessPieces[0, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White,     _skins.whitePlayerSkin);
+        _chessPieces[1, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White,   _skins.whitePlayerSkin);
+        _chessPieces[2, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White,   _skins.whitePlayerSkin);
+        _chessPieces[3, 0] = SpawnSinglePiece(EPiece.Queen, ETeam.White,    _skins.whitePlayerSkin);
+        _chessPieces[4, 0] = SpawnSinglePiece(EPiece.King, ETeam.White,     _skins.whitePlayerSkin);
+        _chessPieces[5, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White,   _skins.whitePlayerSkin);
+        _chessPieces[6, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White,   _skins.whitePlayerSkin);
+        _chessPieces[7, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White,     _skins.whitePlayerSkin);
         for (int i = 0; i < TILE_COUNT_X; i++)                         
         {                                                              
-            _chessPieces[i, 1] = SpawnSinglePiece(Piece.Pawn, Team.White, _skins.whitePlayerSkin);
+            _chessPieces[i, 1] = SpawnSinglePiece(EPiece.Pawn, ETeam.White, _skins.whitePlayerSkin);
         }                                                                 
         #endregion                                                        
                                                                           
         #region BLACK                                                     
-        _chessPieces[0, 7] = SpawnSinglePiece(Piece.Rook, Team.Black,     _skins.blackPlayerSkin);
-        _chessPieces[1, 7] = SpawnSinglePiece(Piece.Knight, Team.Black,   _skins.blackPlayerSkin);
-        _chessPieces[2, 7] = SpawnSinglePiece(Piece.Bishop, Team.Black,   _skins.blackPlayerSkin);
-        _chessPieces[3, 7] = SpawnSinglePiece(Piece.Queen, Team.Black,    _skins.blackPlayerSkin);
-        _chessPieces[4, 7] = SpawnSinglePiece(Piece.King, Team.Black,     _skins.blackPlayerSkin);
-        _chessPieces[5, 7] = SpawnSinglePiece(Piece.Bishop, Team.Black,   _skins.blackPlayerSkin);
-        _chessPieces[6, 7] = SpawnSinglePiece(Piece.Knight, Team.Black,   _skins.blackPlayerSkin);
-        _chessPieces[7, 7] = SpawnSinglePiece(Piece.Rook, Team.Black,     _skins.blackPlayerSkin);
+        _chessPieces[0, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black,     _skins.blackPlayerSkin);
+        _chessPieces[1, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black,   _skins.blackPlayerSkin);
+        _chessPieces[2, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black,   _skins.blackPlayerSkin);
+        _chessPieces[3, 7] = SpawnSinglePiece(EPiece.Queen, ETeam.Black,    _skins.blackPlayerSkin);
+        _chessPieces[4, 7] = SpawnSinglePiece(EPiece.King, ETeam.Black,     _skins.blackPlayerSkin);
+        _chessPieces[5, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black,   _skins.blackPlayerSkin);
+        _chessPieces[6, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black,   _skins.blackPlayerSkin);
+        _chessPieces[7, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black,     _skins.blackPlayerSkin);
         for (int i = 0; i < TILE_COUNT_X; i++)                          
         {                                                               
-            _chessPieces[i, 6] = SpawnSinglePiece(Piece.Pawn, Team.Black, _skins.blackPlayerSkin);
+            _chessPieces[i, 6] = SpawnSinglePiece(EPiece.Pawn, ETeam.Black, _skins.blackPlayerSkin);
         }
         #endregion
     }
-    private ChessPiece SpawnSinglePiece(Piece pieceType, Team team, Skin skin)
+    private ChessPiece SpawnSinglePiece(EPiece pieceType, ETeam team, ESkin skin)
     {
         string path = $"ChessPieces3D/{team}/{skin}/{pieceType}";
         GameObject pieceObject = Resources.Load<GameObject>(path);
@@ -222,7 +225,7 @@ public class GameManager : MonoBehaviour
         for (int x = 0; x < TILE_COUNT_X; x++)
             for (int y = 0; y < TILE_COUNT_Y; y++)
                 if (_chessPieces[x, y] != null)
-                    PositionSinglePiece(x, y, true);
+                    PositionSinglePiece(x, y);
     }
     private void PositionSinglePiece(int x, int y, bool force = false)
     {
@@ -253,7 +256,6 @@ public class GameManager : MonoBehaviour
                 _currentHover = hitPosition;
                 _tiles[hitPosition.x, hitPosition.y].layer = LayerMask.NameToLayer("Hover");
             }
-            //CheckClickStatus(hitPosition);
         }
         else
         {
@@ -279,32 +281,23 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    //private void CheckClickStatus(Vector2Int hitPosition)
-    //{
-    //    if (Input.GetMouseButtonDown(0))
-    //    {
-    //        if (_chessPieces[hitPosition.x, hitPosition.y] != null)
-    //        {
-    //            if ((_chessPieces[hitPosition.x, hitPosition.y].team == Team.White && _isWhiteTurn) || (_chessPieces[hitPosition.x, hitPosition.y].team == Team.Black && !_isWhiteTurn))
-    //            {
-    //                _currentlyDragging = _chessPieces[hitPosition.x, hitPosition.y];
-    //                _availableMoves = _currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-    //                HighlightTiles();
-    //            }
-    //        }
-    //    }
-    //    if (_currentlyDragging != null && Input.GetMouseButtonUp(0))
-    //    {
-    //        Vector2Int previousPosition = new(_currentlyDragging.currentX, _currentlyDragging.currentY);
-
-    //        bool validMove = MoveTo(_currentlyDragging, hitPosition.x, hitPosition.y);
-    //        if (!validMove)
-    //            _currentlyDragging.SetPosition(GetTileCenter(previousPosition.x, previousPosition.y));
-    //        _currentlyDragging = null;
-    //        RemoveHighlightTiles();
-    //    }
-    //}
-
+    private void OnClick(InputAction.CallbackContext obj)
+    {
+        if (_currentHover!= -Vector2Int.one)
+        {
+            if (_chessPieces[_currentHover.x, _currentHover.y] != null)
+            {
+                if ((_chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && _isWhiteTurn) || (_chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && !_isWhiteTurn))
+                {
+                    _currentlyDragging = _chessPieces[_currentHover.x, _currentHover.y];
+                    _availableMoves = _currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
+                    _eSpecialMove = _currentlyDragging.GetSpecialMoves(ref _chessPieces, ref _moveList, ref _availableMoves);
+                    PreventCheck();
+                    HighlightTiles();
+                }
+            }
+        }
+    }
     private void OnRelease(InputAction.CallbackContext obj)
     {
         if (_currentlyDragging != null)
@@ -315,22 +308,6 @@ public class GameManager : MonoBehaviour
                 _currentlyDragging.SetPosition(GetTileCenter(previousPosition.x, previousPosition.y));
             _currentlyDragging = null;
             RemoveHighlightTiles();
-        }
-    }
-
-    private void OnClick(InputAction.CallbackContext obj)
-    {
-        if (_currentHover!= -Vector2Int.one)
-        {
-            if (_chessPieces[_currentHover.x, _currentHover.y] != null)
-            {
-                if ((_chessPieces[_currentHover.x, _currentHover.y].team == Team.White && _isWhiteTurn) || (_chessPieces[_currentHover.x, _currentHover.y].team == Team.Black && !_isWhiteTurn))
-                {
-                    _currentlyDragging = _chessPieces[_currentHover.x, _currentHover.y];
-                    _availableMoves = _currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-                    HighlightTiles();
-                }
-            }
         }
     }
     private void HighlightTiles()
@@ -361,7 +338,7 @@ public class GameManager : MonoBehaviour
     }
     private bool MoveTo(ChessPiece cp, int x, int y)
     {
-        if (!ContainsValidMove(ref _availableMoves, new Vector2(x, y))) return false;
+        if (!ContainsValidMove(ref _availableMoves, new Vector2Int(x, y))) return false;
         Vector2Int previousPosition = new(cp.currentX, cp.currentY);
 
         if (_chessPieces[x, y] != null)
@@ -371,16 +348,16 @@ public class GameManager : MonoBehaviour
             {
                 return false;
             }
-            else if (ocp.team == Team.White)
+            else if (ocp.team == ETeam.White)
             {
-                if (ocp.piece == Piece.King) { CheckMate(Team.Black); }
+                if (ocp.piece == EPiece.King) { CheckMate(ETeam.Black); }
                 _deathParameters.deadWhites.Add(ocp);
                 ocp.SetScale(Vector3.one * _deathParameters.deathSize);
                 ocp.SetPosition(new Vector3(_deathParameters.deathStartOffsetModifier * _spawnParameters.tileSize, _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, -_deathParameters.deathDistanceOffsetModifier * _spawnParameters.tileSize) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.left * _deathParameters.deathSpacing) * _deathParameters.deadWhites.Count);
             }
-            else if (ocp.team == Team.Black)
+            else if (ocp.team == ETeam.Black)
             {
-                if (ocp.piece == Piece.King) { CheckMate(Team.White); }
+                if (ocp.piece == EPiece.King) { CheckMate(ETeam.White); }
                 _deathParameters.deadBlacks.Add(ocp);
                 ocp.SetScale(Vector3.one * _deathParameters.deathSize);
                 ocp.SetPosition(new Vector3(-(_spawnParameters.tileSize + 1f), _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, _spawnParameters.tileSize * (_deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.right * _deathParameters.deathSpacing) * _deathParameters.deadBlacks.Count);
@@ -393,6 +370,10 @@ public class GameManager : MonoBehaviour
         PositionSinglePiece(x, y);
 
         _isWhiteTurn = !_isWhiteTurn;
+        _moveList.Add(new Vector2Int[] {previousPosition, new(x, y) });
+
+        ProcessSpecialMove();
+
         return true;
     }
     private Vector2Int LookupTileIndex(GameObject hitInfo)
@@ -410,6 +391,123 @@ public class GameManager : MonoBehaviour
         return -Vector2Int.one;
     }
     #endregion
+    private void ProcessSpecialMove() 
+    {
+        if(_eSpecialMove == ESpecialMove.EnPassant)
+        {
+            var newMove = _moveList[^1];
+            ChessPiece playerPawn = _chessPieces[newMove[1].x, newMove[1].y];
+            var targetPawnPosition = _moveList[^2];
+            ChessPiece enemyPawn = _chessPieces[targetPawnPosition[1].x, targetPawnPosition[1].y];
+
+            if(playerPawn.currentX == enemyPawn.currentX&& Mathf.Abs(playerPawn.currentY-enemyPawn.currentY) == 1)
+            {
+                if (enemyPawn.team==ETeam.White)
+                {
+                    if (enemyPawn.piece == EPiece.King) { CheckMate(ETeam.Black); }
+                    _deathParameters.deadWhites.Add(enemyPawn);
+                    enemyPawn.SetScale(Vector3.one * _deathParameters.deathSize);
+                    enemyPawn.SetPosition(new Vector3(_deathParameters.deathStartOffsetModifier * _spawnParameters.tileSize, _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, -_deathParameters.deathDistanceOffsetModifier * _spawnParameters.tileSize) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.left * _deathParameters.deathSpacing) * _deathParameters.deadWhites.Count);
+                }
+                if (enemyPawn.team == ETeam.Black)
+                {
+                    if (enemyPawn.piece == EPiece.King) { CheckMate(ETeam.White); }
+                    _deathParameters.deadBlacks.Add(enemyPawn);
+                    enemyPawn.SetScale(Vector3.one * _deathParameters.deathSize);
+                    enemyPawn.SetPosition(new Vector3(-(_spawnParameters.tileSize + 1f), _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, _spawnParameters.tileSize * (_deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.right * _deathParameters.deathSpacing) * _deathParameters.deadBlacks.Count);
+                }
+                _chessPieces[enemyPawn.currentX, enemyPawn.currentY] = null;
+            }
+        }
+        if(_eSpecialMove == ESpecialMove.Promotion)
+        {
+            Vector2Int[] lastMove = _moveList[^1];
+            ChessPiece targetPawn = _chessPieces[lastMove[1].x, lastMove[1].y];
+
+            if (targetPawn.piece==EPiece.Pawn)
+            {
+                if (targetPawn.team == ETeam.White && lastMove[1].y == 7)
+                {
+                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.White,_skins.whitePlayerSkin);
+                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
+                    Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+                    _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
+                    PositionSinglePiece(lastMove[1].x, lastMove[1].y,true);
+                }
+                if (targetPawn.team == ETeam.Black && lastMove[1].y == 0)
+                {
+                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.Black, _skins.blackPlayerSkin);
+                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
+                    Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+                    _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
+                    PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
+                }
+            }
+        }
+        if(_eSpecialMove == ESpecialMove.Castling)
+        {
+            Vector2Int[] lastMove = _moveList[^1];
+            //Left rook
+            if (lastMove[1].x == 2)
+            {
+                //White
+                if (lastMove[1].y == 0)
+                {
+                    ChessPiece rook = _chessPieces[0, 0];
+                    _chessPieces[3,0] = rook;
+                    PositionSinglePiece(3, 0);
+                    _chessPieces[0, 0] = null;
+                }
+                //black
+                else if (lastMove[1].y == 7)
+                {
+                    ChessPiece rook = _chessPieces[0, 7];
+                    _chessPieces[3, 7] = rook;
+                    PositionSinglePiece(3, 7);
+                    _chessPieces[0, 7] = null;
+                }
+            }
+            //Right rook
+            else if (lastMove[1].x == 6)
+            {
+                //White
+                if (lastMove[1].y == 0)
+                {
+                    ChessPiece rook = _chessPieces[7, 0];
+                    _chessPieces[5, 0] = rook;
+                    PositionSinglePiece(5, 0);
+                    _chessPieces[7, 0] = null;
+                }
+                //black
+                else if (lastMove[1].y == 7)
+                {
+                    ChessPiece rook = _chessPieces[7, 7];
+                    _chessPieces[5, 7] = rook;
+                    PositionSinglePiece(5, 7);
+                    _chessPieces[7, 7] = null;
+                }
+            }
+        }
+    }
+    private void PreventCheck()
+    {
+        ChessPiece targetKing = null;
+        for (int x = 0; x < TILE_COUNT_X; x++)
+        {
+            for (int y = 0; y < TILE_COUNT_Y; y++)
+            {
+                if (_chessPieces[x, y].piece == EPiece.King && _chessPieces[x,y].team == _currentlyDragging.team) 
+                {
+                    targetKing = _chessPieces[x, y];
+                }
+            }
+        }
+        SimulateForSinglePiece(_currentlyDragging, ref _availableMoves, targetKing);
+    }
+    private void SimulateForSinglePiece(ChessPiece chessPiece,ref List<Vector2Int> moves, ChessPiece targetKing)
+    {
+
+    }
     #endregion
 }
 [System.Serializable]
@@ -435,6 +533,14 @@ public class DeathParameters
 [System.Serializable]
 public class Skins
 {
-    public Skin whitePlayerSkin;
-    public Skin blackPlayerSkin;
+    public ESkin whitePlayerSkin;
+    public ESkin blackPlayerSkin;
+}
+
+public enum ESpecialMove
+{
+    None = 0,
+    EnPassant = 1,
+    Castling = 2,
+    Promotion =3
 }

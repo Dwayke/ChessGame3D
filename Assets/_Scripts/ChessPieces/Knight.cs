@@ -5,7 +5,7 @@ public class Knight : ChessPiece
 {
     public override List<Vector2Int> GetAvailableMoves(ref ChessPiece[,] board, int tileCountX, int tileCountY)
     {
-        List<Vector2Int> r = new();
+        List<Vector2Int> availableMoves = new();
         //Top Right
         int x  =  currentX+1;
         int y = currentY+2;
@@ -13,7 +13,7 @@ public class Knight : ChessPiece
         {
             if (board[x,y] == null || board[x,y].team != team)
             {
-                r.Add(new Vector2Int(x,y));
+                availableMoves.Add(new Vector2Int(x,y));
             }
         }
         x = currentX + 2;
@@ -22,7 +22,7 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
         //Top Left
@@ -32,7 +32,7 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
         x = currentX - 2;
@@ -41,7 +41,7 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
         //Bottom Right
@@ -51,7 +51,7 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
         x = currentX + 2;
@@ -60,7 +60,7 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
         //Top Left
@@ -70,7 +70,7 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
         x = currentX - 2;
@@ -79,9 +79,9 @@ public class Knight : ChessPiece
         {
             if (board[x, y] == null || board[x, y].team != team)
             {
-                r.Add(new Vector2Int(x, y));
+                availableMoves.Add(new Vector2Int(x, y));
             }
         }
-        return r;
+        return availableMoves;
     }
 }

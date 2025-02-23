@@ -6,9 +6,9 @@ public class ChessPiece : MonoBehaviour
     #region VARS
     public int currentX;
     public int currentY;
-    public Team team;
-    public Skin skin;
-    public Piece piece;
+    public ETeam team;
+    public ESkin skin;
+    public EPiece piece;
 
     private Vector3 _desiredPosition;
     private Vector3 _desiredScale = Vector3.one;
@@ -16,7 +16,7 @@ public class ChessPiece : MonoBehaviour
     #region ENGINE
     private void Start()
     {
-        transform.rotation = Quaternion.Euler((team == Team.White)? Vector3.zero: new Vector3(0,180,0));
+        transform.rotation = Quaternion.Euler((team == ETeam.White)? Vector3.zero: new Vector3(0,180,0));
     }
     private void Update()
     {
@@ -25,7 +25,6 @@ public class ChessPiece : MonoBehaviour
     }
     #endregion
     #region MEMBER
-    //SMOOTH MOVEMENT
     public virtual void SetPosition(Vector3 position, bool force = false)
     {
         _desiredPosition = position;
@@ -50,23 +49,28 @@ public class ChessPiece : MonoBehaviour
 
         }
     }
+    public virtual ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
+    {
+        ESpecialMove specialMove = ESpecialMove.None;
+        return specialMove;
+    }
     public virtual List<Vector2Int> GetAvailableMoves(ref ChessPiece[,] board, int tileCountX, int tileCountY)
     {
-        List<Vector2Int> r = new();
-        return r;
+        List<Vector2Int> availableMoves = new();
+        return availableMoves;
     }
     #endregion
     #region LOCAL
 
     #endregion
 }
-public enum Team
+public enum ETeam
 {
     None = 0,
     Black = 1,
     White = 2
 }
-public enum Skin
+public enum ESkin
 {
     None = 0,
     HighPoly = 1,
@@ -76,7 +80,7 @@ public enum Skin
     LowPoly = 5,
     LowPolyWood = 6
 }
-public enum Piece
+public enum EPiece
 {
     None = 0,
     Pawn = 1,
@@ -86,3 +90,4 @@ public enum Piece
     Queen = 5,
     King = 6
 }
+

@@ -5,18 +5,18 @@ public class Rook : ChessPiece
 {
     public override List<Vector2Int> GetAvailableMoves(ref ChessPiece[,] board, int tileCountX, int tileCountY)
     {
-        List<Vector2Int> r = new();
+        List<Vector2Int> availableMoves = new();
         //Down
         for (int i =currentY-1; i >= 0; i--)
         {
             if (board[currentX,i]==null)
             {
-                r.Add(new(currentX, i));
+                availableMoves.Add(new(currentX, i));
             }
             if (board[currentX,i]!=null)
             {
                 if(board[currentX,i].team!=team)
-                r.Add(new(currentX, i));
+                availableMoves.Add(new(currentX, i));
                 break;
             }
         }
@@ -25,12 +25,12 @@ public class Rook : ChessPiece
         {
             if (board[currentX, i] == null)
             {
-                r.Add(new(currentX, i));
+                availableMoves.Add(new(currentX, i));
             }
             if (board[currentX, i] != null)
             {
                 if (board[currentX, i].team != team)
-                    r.Add(new(currentX, i));
+                    availableMoves.Add(new(currentX, i));
                 break;
             }
         }
@@ -39,12 +39,12 @@ public class Rook : ChessPiece
         {
             if (board[i, currentY] == null)
             {
-                r.Add(new(i, currentY));
+                availableMoves.Add(new(i, currentY));
             }
             if (board[i, currentY] != null)
             {
                 if (board[i, currentY].team != team)
-                    r.Add(new(i, currentY));
+                    availableMoves.Add(new(i, currentY));
                 break;
             }
         }        
@@ -53,16 +53,16 @@ public class Rook : ChessPiece
         {
             if (board[i, currentY] == null)
             {
-                r.Add(new(i, currentY));
+                availableMoves.Add(new(i, currentY));
             }
             if (board[i, currentY] != null)
             {
                 if (board[i, currentY].team != team)
-                    r.Add(new(i, currentY));
+                    availableMoves.Add(new(i, currentY));
                 break;
             }
         }
 
-        return r;
+        return availableMoves;
     }
 }
