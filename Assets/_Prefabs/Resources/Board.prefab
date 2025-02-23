@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1835299359254261378}
-  - component: {fileID: 5311708544198918236}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -33,22 +32,6 @@ Transform:
   - {fileID: 2872504410429696224}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5311708544198918236
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6473793653252743823}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f81924475a0a1114780a433588565a5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _blackTileMaterial: {fileID: 2100000, guid: d4f44b1fe8ee9654f8883801a9ed897e, type: 2}
-  _whiteTileMaterial: {fileID: 2100000, guid: 255ddda0f9e613b4a8a62adbee983548, type: 2}
-  _boardCenter: {x: 0, y: 0, z: 0}
-  _tileSize: 0.5
 --- !u!1 &9131000120188597397
 GameObject:
   m_ObjectHideFlags: 0
