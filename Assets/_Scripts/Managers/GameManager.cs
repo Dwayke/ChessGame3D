@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviour
     #region ENGINE
     private void Awake()
     {
+        Instance = this;
         _chessControls = new ChessControls();
         _isWhiteTurn = true;
         GenerateAllTiles(_spawnParameters.tileSize, TILE_COUNT_X, TILE_COUNT_Y);
