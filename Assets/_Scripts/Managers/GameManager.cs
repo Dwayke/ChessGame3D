@@ -1,10 +1,10 @@
+using FishNet.Object;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEngine.InputSystem.HID.HID;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     #region VARS
     public static GameManager Instance;
@@ -47,6 +47,7 @@ public class GameManager : MonoBehaviour
         GenerateAllTiles(_spawnParameters.tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         SpawnAllPieces();
         PositionAllPieces();
+        
     }
     private void OnEnable()
     {
@@ -62,6 +63,7 @@ public class GameManager : MonoBehaviour
     }
     void Update()
     {
+        if (!base.IsOwner) return;
         if (!_currentCamera)
         {
             _currentCamera = Camera.main;
@@ -285,6 +287,7 @@ public class GameManager : MonoBehaviour
     }
     private void OnClick(InputAction.CallbackContext obj)
     {
+        if(!_currentCamera) return;
         if (_currentHover!= -Vector2Int.one)
         {
             if (_chessPieces[_currentHover.x, _currentHover.y] != null)
@@ -585,7 +588,7 @@ public class GameManager : MonoBehaviour
     }
     private bool CheckForCheckmate()
     {
-        var lastMove = _moveList[_moveList.Count - 1];
+        var lastMove = _moveList[^1];
         ETeam targetTeam = (_chessPieces[lastMove[1].x, lastMove[1].y].team == ETeam.White) ? ETeam.Black:ETeam.White;
 
         List<ChessPiece> attackingPieces = new();
