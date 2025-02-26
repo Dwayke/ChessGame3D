@@ -1,4 +1,5 @@
 using FishNet.Object;
+using FishNet;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -47,7 +48,6 @@ public class GameManager : NetworkBehaviour
         GenerateAllTiles(_spawnParameters.tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         SpawnAllPieces();
         PositionAllPieces();
-        
     }
     private void OnEnable()
     {
@@ -63,7 +63,7 @@ public class GameManager : NetworkBehaviour
     }
     void Update()
     {
-        if (!base.IsOwner) return;
+        //if (!base.IsOwner) return;
         if (!_currentCamera)
         {
             _currentCamera = Camera.main;
@@ -73,16 +73,28 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region MEMBER METHODS
-    public void CheckMate(ETeam winner)
+    [ObserversRpc]
+    private void CheckmateRpc(ETeam winner)
     {
         DisplayVictory(winner);
+
     }
-    public void DisplayVictory(ETeam winner)
+    public void CheckMate(ETeam winner)
+    {
+        CheckmateRpc( winner);
+    }
+    [ObserversRpc]
+    private void DisplayVictoryRpc(ETeam winner)
     {
         _victoryScreen.SetActive(true);
         _victoryText.text = winner.ToString() + " Team Won!";
     }
-    public void OnResetButton()
+    public void DisplayVictory(ETeam winner)
+    {
+        DisplayVictoryRpc(winner);
+    }
+    [ObserversRpc]
+    private void OnResetButtonRpc()
     {
         //UI
         _victoryScreen.SetActive(false);
@@ -117,6 +129,10 @@ public class GameManager : NetworkBehaviour
         SpawnAllPieces();
         PositionAllPieces();
         _isWhiteTurn = true;
+    }
+    public void OnResetButton()
+    {
+        OnResetButtonRpc();
     }
     public void OnExitButton()
     {
@@ -174,38 +190,44 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region SPAWN PIECES
-    private void SpawnAllPieces()
+    [ObserversRpc]
+    private void SpawnAllPiecesRpc()
     {
+        Debug.Log("Spawn All Pieces");
         _chessPieces = new ChessPiece[TILE_COUNT_Y, TILE_COUNT_Y];
         #region WHITE
-        _chessPieces[0, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White,     _skins.whitePlayerSkin);
-        _chessPieces[1, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White,   _skins.whitePlayerSkin);
-        _chessPieces[2, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White,   _skins.whitePlayerSkin);
-        _chessPieces[3, 0] = SpawnSinglePiece(EPiece.Queen, ETeam.White,    _skins.whitePlayerSkin);
-        _chessPieces[4, 0] = SpawnSinglePiece(EPiece.King, ETeam.White,     _skins.whitePlayerSkin);
-        _chessPieces[5, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White,   _skins.whitePlayerSkin);
-        _chessPieces[6, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White,   _skins.whitePlayerSkin);
-        _chessPieces[7, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White,     _skins.whitePlayerSkin);
-        for (int i = 0; i < TILE_COUNT_X; i++)                         
-        {                                                              
+        _chessPieces[0, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[1, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[2, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[3, 0] = SpawnSinglePiece(EPiece.Queen, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[4, 0] = SpawnSinglePiece(EPiece.King, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[5, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[6, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[7, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White, _skins.whitePlayerSkin);
+        for (int i = 0; i < TILE_COUNT_X; i++)
+        {
             _chessPieces[i, 1] = SpawnSinglePiece(EPiece.Pawn, ETeam.White, _skins.whitePlayerSkin);
-        }                                                                 
-        #endregion                                                        
-                                                                          
+        }
+        #endregion
+
         #region BLACK                                                     
-        _chessPieces[0, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black,     _skins.blackPlayerSkin);
-        _chessPieces[1, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black,   _skins.blackPlayerSkin);
-        _chessPieces[2, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black,   _skins.blackPlayerSkin);
-        _chessPieces[3, 7] = SpawnSinglePiece(EPiece.Queen, ETeam.Black,    _skins.blackPlayerSkin);
-        _chessPieces[4, 7] = SpawnSinglePiece(EPiece.King, ETeam.Black,     _skins.blackPlayerSkin);
-        _chessPieces[5, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black,   _skins.blackPlayerSkin);
-        _chessPieces[6, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black,   _skins.blackPlayerSkin);
-        _chessPieces[7, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black,     _skins.blackPlayerSkin);
-        for (int i = 0; i < TILE_COUNT_X; i++)                          
-        {                                                               
+        _chessPieces[0, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[1, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[2, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[3, 7] = SpawnSinglePiece(EPiece.Queen, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[4, 7] = SpawnSinglePiece(EPiece.King, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[5, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[6, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[7, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black, _skins.blackPlayerSkin);
+        for (int i = 0; i < TILE_COUNT_X; i++)
+        {
             _chessPieces[i, 6] = SpawnSinglePiece(EPiece.Pawn, ETeam.Black, _skins.blackPlayerSkin);
         }
         #endregion
+    }
+    public void SpawnAllPieces()
+    {
+        SpawnAllPiecesRpc();
     }
     private ChessPiece SpawnSinglePiece(EPiece pieceType, ETeam team, ESkin skin)
     {
@@ -214,22 +236,28 @@ public class GameManager : NetworkBehaviour
         if (pieceObject != null)
         {
             ChessPiece piece = Instantiate(pieceObject, _board.transform).GetComponent<ChessPiece>();
+            Spawn(piece.gameObject);
             return piece;
         }
         else
         {
-            Debug.LogError($"Sprite not found at path: {path}");
+            Debug.LogError($"Prefab not found at path: {path}");
             return null;
         }
     }
     #endregion
     #region POSITIONING
-    private void PositionAllPieces()
+    [ObserversRpc]
+    private void PositionAllPiecesRpc()
     {
         for (int x = 0; x < TILE_COUNT_X; x++)
             for (int y = 0; y < TILE_COUNT_Y; y++)
                 if (_chessPieces[x, y] != null)
                     PositionSinglePiece(x, y);
+    }
+    public void PositionAllPieces()
+    {
+        PositionAllPiecesRpc();
     }
     private void PositionSinglePiece(int x, int y, bool force = false)
     {
@@ -285,10 +313,11 @@ public class GameManager : NetworkBehaviour
             }
         }
     }
-    private void OnClick(InputAction.CallbackContext obj)
+    [ObserversRpc]
+    private void OnClickRpc()
     {
-        if(!_currentCamera) return;
-        if (_currentHover!= -Vector2Int.one)
+        if (!_currentCamera) return;
+        if (_currentHover != -Vector2Int.one)
         {
             if (_chessPieces[_currentHover.x, _currentHover.y] != null)
             {
@@ -303,7 +332,12 @@ public class GameManager : NetworkBehaviour
             }
         }
     }
-    private void OnRelease(InputAction.CallbackContext obj)
+    private void OnClick(InputAction.CallbackContext obj)
+    {
+        OnClickRpc();
+    }
+    [ObserversRpc]
+    private void OnReleaseRpc()
     {
         if (_currentlyDragging != null)
         {
@@ -314,6 +348,10 @@ public class GameManager : NetworkBehaviour
             _currentlyDragging = null;
             RemoveHighlightTiles();
         }
+    }
+    private void OnRelease(InputAction.CallbackContext obj)
+    {
+        OnReleaseRpc();
     }
     private void HighlightTiles()
     {
@@ -340,6 +378,11 @@ public class GameManager : NetworkBehaviour
             }
         }
         return false;
+    }
+    [ObserversRpc]
+    private void MoveToRpc(ChessPiece cp, int x, int y)
+    {
+        MoveTo(cp,x,y);
     }
     private bool MoveTo(ChessPiece cp, int x, int y)
     {

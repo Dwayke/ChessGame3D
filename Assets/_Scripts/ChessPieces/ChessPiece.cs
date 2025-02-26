@@ -1,7 +1,9 @@
+using FishNet.Object;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
-public class ChessPiece : MonoBehaviour
+public class ChessPiece : NetworkBehaviour
 {
     #region VARS
     public int currentX;
@@ -20,12 +22,18 @@ public class ChessPiece : MonoBehaviour
     }
     private void Update()
     {
-        transform.position = Vector3.Lerp(transform.position,_desiredPosition,Time.deltaTime*10);
-        transform.localScale = Vector3.Lerp(transform.localScale,_desiredScale,Time.deltaTime*10);
+        ApplyTransformRpc();
+    }
+    [ObserversRpc]
+    private void ApplyTransformRpc()
+    {
+        transform.position = Vector3.Lerp(transform.position, _desiredPosition, Time.deltaTime * 10);
+        transform.localScale = Vector3.Lerp(transform.localScale, _desiredScale, Time.deltaTime * 10);
     }
     #endregion
     #region MEMBER
-    public virtual void SetPosition(Vector3 position, bool force = false)
+    [ObserversRpc]
+    private void SetPositionRPC(Vector3 position, bool force = false)
     {
         _desiredPosition = position;
         if (force)
@@ -36,8 +44,13 @@ public class ChessPiece : MonoBehaviour
         {
 
         }
-    }    
-    public virtual void SetScale(Vector3 scale, bool force = false)
+    }
+    public virtual void SetPosition(Vector3 position, bool force = false)
+    {
+        SetPositionRPC(position,force);
+    }
+    [ObserversRpc]
+    private void SetScaleRPC(Vector3 scale, bool force = false)
     {
         _desiredScale = scale;
         if (force)
@@ -48,6 +61,10 @@ public class ChessPiece : MonoBehaviour
         {
 
         }
+    }
+    public virtual void SetScale(Vector3 scale, bool force = false)
+    {
+        SetScaleRPC(scale, force);
     }
     public virtual ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {

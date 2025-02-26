@@ -96,8 +96,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5934813079859936074}
   - component: {fileID: 5361794901761099602}
-  - component: {fileID: -4966868694485677597}
-  - component: {fileID: 7774666950674767458}
+  - component: {fileID: 2344599503392247123}
   m_Layer: 0
   m_Name: Pawn
   m_TagString: Untagged
@@ -133,55 +132,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96779a53514eb7a4a8d1d5e5ef1bf59f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 2344599503392247123}
+  _networkObjectCache: {fileID: 0}
   currentX: 0
   currentY: 0
   team: 1
   skin: 4
   piece: 1
---- !u!114 &-4966868694485677597
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3948544203046894734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 7774666950674767458}
-  _networkObjectCache: {fileID: 0}
-  _componentConfiguration: 0
-  _synchronizeParent: 0
-  _packing:
-    Position: 1
-    Rotation: 1
-    Scale: 0
-  _interpolation: 2
-  _extrapolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  _clientAuthoritative: 1
-  _sendToOwner: 1
-  _interval: 1
-  _synchronizePosition: 1
-  _positionSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeRotation: 1
-  _rotationSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeScale: 1
-  _scaleSnapping:
-    X: 0
-    Y: 0
-    Z: 0
---- !u!114 &7774666950674767458
+--- !u!114 &2344599503392247123
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

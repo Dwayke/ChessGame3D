@@ -27,6 +27,8 @@ public class GameUI : MonoBehaviour
     {
         //server.StartConnection();
         //client.StartConnection(_addressInput.text, 7777);
+        GameManager.Instance.SpawnAllPieces();
+        GameManager.Instance.PositionAllPieces();
         _menuAnimator.SetTrigger("InGameMenu");
         Debug.Log("Start Local Game");
     }

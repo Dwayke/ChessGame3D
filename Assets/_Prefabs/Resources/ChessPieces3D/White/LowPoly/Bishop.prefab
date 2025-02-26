@@ -10,8 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4241257311695284167}
   - component: {fileID: -7972090781629056702}
-  - component: {fileID: 159234320707572282}
-  - component: {fileID: 3630254259335107945}
+  - component: {fileID: -3961426304648271297}
   m_Layer: 0
   m_Name: Bishop
   m_TagString: Untagged
@@ -47,55 +46,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e05b1aa17880e5544b4b4a66c1336f4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: -3961426304648271297}
+  _networkObjectCache: {fileID: 0}
   currentX: 0
   currentY: 0
   team: 2
   skin: 5
   piece: 4
---- !u!114 &159234320707572282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1634856183957104140}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 3630254259335107945}
-  _networkObjectCache: {fileID: 0}
-  _componentConfiguration: 0
-  _synchronizeParent: 0
-  _packing:
-    Position: 1
-    Rotation: 1
-    Scale: 0
-  _interpolation: 2
-  _extrapolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  _clientAuthoritative: 1
-  _sendToOwner: 1
-  _interval: 1
-  _synchronizePosition: 1
-  _positionSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeRotation: 1
-  _rotationSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeScale: 1
-  _scaleSnapping:
-    X: 0
-    Y: 0
-    Z: 0
---- !u!114 &3630254259335107945
+--- !u!114 &-3961426304648271297
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

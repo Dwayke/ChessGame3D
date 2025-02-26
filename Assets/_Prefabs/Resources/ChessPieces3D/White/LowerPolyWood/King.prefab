@@ -96,8 +96,7 @@ GameObject:
   m_Component:
   - component: {fileID: 438450218594229390}
   - component: {fileID: 357336454811935435}
-  - component: {fileID: 5982300920518828433}
-  - component: {fileID: 7852362165723132610}
+  - component: {fileID: 9157892892503727158}
   m_Layer: 0
   m_Name: King
   m_TagString: Untagged
@@ -133,55 +132,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e72aec857e477d4ba6ca4223beb6a10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 9157892892503727158}
+  _networkObjectCache: {fileID: 0}
   currentX: 0
   currentY: 0
   team: 2
   skin: 4
   piece: 6
---- !u!114 &5982300920518828433
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5778110856783972681}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 7852362165723132610}
-  _networkObjectCache: {fileID: 0}
-  _componentConfiguration: 0
-  _synchronizeParent: 0
-  _packing:
-    Position: 1
-    Rotation: 1
-    Scale: 0
-  _interpolation: 2
-  _extrapolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  _clientAuthoritative: 1
-  _sendToOwner: 1
-  _interval: 1
-  _synchronizePosition: 1
-  _positionSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeRotation: 1
-  _rotationSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeScale: 1
-  _scaleSnapping:
-    X: 0
-    Y: 0
-    Z: 0
---- !u!114 &7852362165723132610
+--- !u!114 &9157892892503727158
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

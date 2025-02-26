@@ -1156,8 +1156,8 @@ MonoBehaviour:
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
   RuntimeChildNetworkBehaviours: []
-  _isNetworked: 0
-  _isSpawnable: 0
+  _isNetworked: 1
+  _isSpawnable: 1
   _isGlobal: 0
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
@@ -1180,7 +1180,7 @@ MonoBehaviour:
   <PrefabId>k__BackingField: 65535
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 0
-  <SceneId>k__BackingField: 4240235949
+  <SceneId>k__BackingField: 3750755839
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 0}
@@ -1812,8 +1812,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ChessBoard, Assembly-CSharp
+      - m_Target: {fileID: 706435075}
+        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: OnExitButton
         m_Mode: 1
         m_Arguments:
@@ -3886,8 +3886,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: ChessBoard, Assembly-CSharp
+      - m_Target: {fileID: 706435075}
+        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: OnResetButton
         m_Mode: 1
         m_Arguments:
@@ -4966,7 +4966,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 211a9f6ec51ddc14f908f5acc0cd0423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _playerPrefab: {fileID: 2817553830352918760, guid: b6a05a2ce6eed904090aace680e87c4e, type: 3}
+  _playerPrefab: {fileID: 6991300187340850409, guid: b6a05a2ce6eed904090aace680e87c4e, type: 3}
   _addToDefaultScene: 1
   Spawns: []
 --- !u!1 &7443408887068086440
