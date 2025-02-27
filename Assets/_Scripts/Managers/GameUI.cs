@@ -8,8 +8,6 @@ using UnityEngine;
 public class GameUI : MonoBehaviour
 {
     #region VARS
-    public static GameUI Instance;
-
     //public ServerManager server;
     //public ClientManager client;
 
@@ -17,18 +15,13 @@ public class GameUI : MonoBehaviour
     [SerializeField] TMP_InputField _addressInput;
     #endregion
     #region ENGINE
-    private void Awake()
-    {
-        Instance = this;
-    }
+
     #endregion
     #region MEMBER
     public void OnLocalGameButton()
     {
         //server.StartConnection();
         //client.StartConnection(_addressInput.text, 7777);
-        GameManager.Instance.SpawnAllPieces();
-        GameManager.Instance.PositionAllPieces();
         _menuAnimator.SetTrigger("InGameMenu");
         Debug.Log("Start Local Game");
     }

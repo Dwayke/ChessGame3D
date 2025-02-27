@@ -1,3 +1,4 @@
+using FishNet.Connection;
 using FishNet.Object;
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,7 +34,7 @@ public class ChessPiece : NetworkBehaviour
     #endregion
     #region MEMBER
     [ObserversRpc]
-    private void SetPositionRPC(Vector3 position, bool force = false)
+    private void RpcSetPosition(Vector3 position, bool force = false)
     {
         _desiredPosition = position;
         if (force)
@@ -45,9 +46,16 @@ public class ChessPiece : NetworkBehaviour
 
         }
     }
+    [ServerRpc(RequireOwnership = false)]
+    public void CmdSetPosition(Vector3 position, bool force = false, NetworkConnection conn = null)
+    {
+        //if (conn == LocalConnection) return;
+        Debug.Log("howaa beyed5ol hena?");
+        RpcSetPosition(position, force);
+    }
     public virtual void SetPosition(Vector3 position, bool force = false)
     {
-        SetPositionRPC(position,force);
+        RpcSetPosition(position,force);
     }
     [ObserversRpc]
     private void SetScaleRPC(Vector3 scale, bool force = false)

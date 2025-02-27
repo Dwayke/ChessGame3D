@@ -4,17 +4,19 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using JetBrains.Annotations;
+using System;
+using FishNet.Object.Synchronizing;
+using System.Linq;
 
 public class GameManager : NetworkBehaviour
 {
     #region VARS
-    public static GameManager Instance;
-
     #region ART
     [Header("Art Parameters")]
-    [SerializeField] SpawnParameters _spawnParameters;
+    public SpawnParameters _spawnParameters;
     [SerializeField] DeathParameters _deathParameters;
-    [SerializeField] float _dragYOffset = 1.5f;
+    public float dragYOffset = 1.5f;
     [SerializeField] GameObject _victoryScreen;
     [SerializeField] TMP_Text _victoryText;
     #endregion
@@ -22,57 +24,40 @@ public class GameManager : NetworkBehaviour
     [Header("Prefabs & Materials")]
     [SerializeField] GameObject _board;
     [SerializeField] Skins _skins;
+    [Header("Players")]
+    public ClientParameters clientParameters;
     #endregion
     #region LOGIC
-    private ChessControls _chessControls;
-    private ChessPiece[,] _chessPieces;
-    private ChessPiece _currentlyDragging;
-    private List<Vector2Int> _availableMoves = new();
-    private ESpecialMove _eSpecialMove;
-    private List<Vector2Int[]> _moveList = new();
+    //private ChessControls _chessControls;
+    public ChessPiece[,] _chessPieces;
+    public List<Vector2Int> _availableMoves = new();
+    public ESpecialMove _eSpecialMove;
+    public List<Vector2Int[]> _moveList = new();
     private const int TILE_COUNT_X = 8;
     private const int TILE_COUNT_Y = 8;
-    private GameObject[,] _tiles;
-    private Camera _currentCamera;
-    private Vector2Int _currentHover;
+    public GameObject[,] tiles;
     Vector3 _bounds;
-    bool _isWhiteTurn;
+    public bool _isWhiteTurn;
     #endregion
     #endregion
     #region ENGINE
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+    }
     private void Awake()
     {
-        Instance = this;
-        _chessControls = new ChessControls();
-        _isWhiteTurn = true;
         GenerateAllTiles(_spawnParameters.tileSize, TILE_COUNT_X, TILE_COUNT_Y);
-        SpawnAllPieces();
-        PositionAllPieces();
-    }
-    private void OnEnable()
-    {
-        _chessControls.Gameplay.Click.performed += OnClick;
-        _chessControls.Gameplay.Release.performed += OnRelease;
-        _chessControls.Gameplay.Enable();
-    }
-    private void OnDisable()
-    {
-        _chessControls.Gameplay.Click.performed -= OnClick;
-        _chessControls.Gameplay.Release.performed -= OnRelease;
-        _chessControls.Gameplay.Disable();
-    }
-    void Update()
-    {
-        //if (!base.IsOwner) return;
-        if (!_currentCamera)
-        {
-            _currentCamera = Camera.main;
-            return;
-        }
-        CheckHoverStatus();
+
     }
     #endregion
     #region MEMBER METHODS
+    public void StartGame()
+    {
+        _isWhiteTurn = true;
+        SpawnAllPieces();
+        PositionAllPieces();
+    }
     [ObserversRpc]
     private void CheckmateRpc(ETeam winner)
     {
@@ -100,7 +85,6 @@ public class GameManager : NetworkBehaviour
         _victoryScreen.SetActive(false);
         _victoryText.text = "";
         //FieldReset
-        _currentlyDragging = null;
         _availableMoves.Clear();
         _moveList.Clear();
         //CleanUp
@@ -145,12 +129,13 @@ public class GameManager : NetworkBehaviour
     {
         _bounds = new Vector3((tileCountX / 2) * tileSize, _spawnParameters.yOffset, (tileCountY / 2) * tileSize) + _spawnParameters.boardCenter;
 
-        _tiles = new GameObject[tileCountX, tileCountY];
+        tiles = new GameObject[tileCountX, tileCountY];
         for (int x = 0; x < tileCountX; x++)
         {
             for (int y = 0; y < tileCountY; y++)
             {
-                _tiles[x, y] = GenerateSingleTile(tileSize, x, y);
+                tiles[x, y] = GenerateSingleTile(tileSize, x, y);
+                Spawn(tiles[x, y]);
             }
         }
     }
@@ -190,11 +175,12 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region SPAWN PIECES
-    [ObserversRpc]
-    private void SpawnAllPiecesRpc()
+    [Server]
+    private void ObserversRpcSpawnAllPieces()
     {
         Debug.Log("Spawn All Pieces");
         _chessPieces = new ChessPiece[TILE_COUNT_Y, TILE_COUNT_Y];
+        var flattenedChessPieces = new ChessPiece[TILE_COUNT_X * TILE_COUNT_Y];
         #region WHITE
         _chessPieces[0, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White, _skins.whitePlayerSkin);
         _chessPieces[1, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White, _skins.whitePlayerSkin);
@@ -223,11 +209,42 @@ public class GameManager : NetworkBehaviour
         {
             _chessPieces[i, 6] = SpawnSinglePiece(EPiece.Pawn, ETeam.Black, _skins.blackPlayerSkin);
         }
+        for (int i = 0; i < TILE_COUNT_X - 1; i++)
+        {
+            for (int j = 0; j < TILE_COUNT_Y; j++)
+            {
+                flattenedChessPieces[i * TILE_COUNT_Y + j] = _chessPieces[i, j]; 
+            }
+        }
         #endregion
+        Debug.Log($"Assigning pieces, first piece: {_chessPieces[0, 0]}");
+        AssignChessArray(flattenedChessPieces.ToList());
+    }
+    [ObserversRpc]
+    public void AssignChessArray(List<ChessPiece> chessPieces)
+    {
+        Debug.Log("assigning chess pieces");
+        if (chessPieces == null)
+        {
+            Debug.Log("Chess pieces null!");
+        }
+        // Reconstruct the 2D array.
+        ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+        for (int x = 0; x < TILE_COUNT_X; x++)
+        {
+            for (int y = 0; y < TILE_COUNT_Y; y++)
+            {
+                // Since the flattening was done in row-major order, we compute the index accordingly.
+                reconstructed[x, y] = chessPieces[x * TILE_COUNT_Y + y];
+            }
+        }
+        Debug.Log($"Assigning pieces, first piece: {reconstructed[0, 0]}");
+        _chessPieces = reconstructed;
     }
     public void SpawnAllPieces()
     {
-        SpawnAllPiecesRpc();
+        Debug.Log("initSpawn All Pieces");
+        ObserversRpcSpawnAllPieces();
     }
     private ChessPiece SpawnSinglePiece(EPiece pieceType, ETeam team, ESkin skin)
     {
@@ -235,7 +252,7 @@ public class GameManager : NetworkBehaviour
         GameObject pieceObject = Resources.Load<GameObject>(path);
         if (pieceObject != null)
         {
-            ChessPiece piece = Instantiate(pieceObject, _board.transform).GetComponent<ChessPiece>();
+            ChessPiece piece = Instantiate(pieceObject).GetComponent<ChessPiece>();
             Spawn(piece.gameObject);
             return piece;
         }
@@ -248,8 +265,9 @@ public class GameManager : NetworkBehaviour
     #endregion
     #region POSITIONING
     [ObserversRpc]
-    private void PositionAllPiecesRpc()
+    private void ObserversRpcPositionAllPieces()
     {
+        Debug.Log("Observer");
         for (int x = 0; x < TILE_COUNT_X; x++)
             for (int y = 0; y < TILE_COUNT_Y; y++)
                 if (_chessPieces[x, y] != null)
@@ -257,7 +275,12 @@ public class GameManager : NetworkBehaviour
     }
     public void PositionAllPieces()
     {
-        PositionAllPiecesRpc();
+        Debug.Log("Home");
+        for (int x = 0; x < TILE_COUNT_X; x++)
+            for (int y = 0; y < TILE_COUNT_Y; y++)
+                if (_chessPieces[x, y] != null)
+                    PositionSinglePiece(x, y);
+        ObserversRpcPositionAllPieces();
     }
     private void PositionSinglePiece(int x, int y, bool force = false)
     {
@@ -265,110 +288,13 @@ public class GameManager : NetworkBehaviour
         _chessPieces[x, y].currentY = y;
         _chessPieces[x, y].SetPosition(GetTileCenter(x, y), force);
     }
-    private Vector3 GetTileCenter(int x, int y)
+    public Vector3 GetTileCenter(int x, int y)
     {
         return new Vector3(x * _spawnParameters.tileSize, _spawnParameters.yOffset, y * _spawnParameters.tileSize) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2);
     }
     #endregion
     #region OPS
-    private void CheckHoverStatus()
-    {
-        Ray ray = _currentCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit info, 100, LayerMask.GetMask("Tile", "Hover", "Highlight")))
-        {
-            Vector2Int hitPosition = LookupTileIndex(info.transform.gameObject);
-            if (_currentHover == -Vector2Int.one)
-            {
-                _currentHover = hitPosition;
-                _tiles[hitPosition.x, hitPosition.y].layer = LayerMask.NameToLayer("Hover");
-            }
-            if (_currentHover != hitPosition)
-            {
-                _tiles[_currentHover.x, _currentHover.y].layer = (ContainsValidMove(ref _availableMoves, _currentHover)) ? LayerMask.NameToLayer("Highlight") : LayerMask.NameToLayer("Tile");
-                _currentHover = hitPosition;
-                _tiles[hitPosition.x, hitPosition.y].layer = LayerMask.NameToLayer("Hover");
-            }
-        }
-        else
-        {
-            if (_currentHover != -Vector2Int.one)
-            {
-                _tiles[_currentHover.x, _currentHover.y].layer = (ContainsValidMove(ref _availableMoves, _currentHover)) ? LayerMask.NameToLayer("Highlight") : LayerMask.NameToLayer("Tile");
-                _currentHover = -Vector2Int.one;
-            }
-            if (_currentlyDragging && Input.GetMouseButtonUp(0))
-            {
-                _currentlyDragging.SetPosition(GetTileCenter(_currentlyDragging.currentX, _currentlyDragging.currentY));
-                _currentlyDragging = null;
-                RemoveHighlightTiles();
-            }
-        }
-
-        if (_currentlyDragging)
-        {
-            Plane horizontalPlane = new(Vector3.up, Vector3.up * _spawnParameters.yOffset);
-            if (horizontalPlane.Raycast(ray, out float distance))
-            {
-                _currentlyDragging.SetPosition(ray.GetPoint(distance) + Vector3.up * _dragYOffset);
-            }
-        }
-    }
-    [ObserversRpc]
-    private void OnClickRpc()
-    {
-        if (!_currentCamera) return;
-        if (_currentHover != -Vector2Int.one)
-        {
-            if (_chessPieces[_currentHover.x, _currentHover.y] != null)
-            {
-                if ((_chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && _isWhiteTurn) || (_chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && !_isWhiteTurn))
-                {
-                    _currentlyDragging = _chessPieces[_currentHover.x, _currentHover.y];
-                    _availableMoves = _currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-                    _eSpecialMove = _currentlyDragging.GetSpecialMoves(ref _chessPieces, ref _moveList, ref _availableMoves);
-                    PreventCheck();
-                    HighlightTiles();
-                }
-            }
-        }
-    }
-    private void OnClick(InputAction.CallbackContext obj)
-    {
-        OnClickRpc();
-    }
-    [ObserversRpc]
-    private void OnReleaseRpc()
-    {
-        if (_currentlyDragging != null)
-        {
-            Vector2Int previousPosition = new(_currentlyDragging.currentX, _currentlyDragging.currentY);
-            bool validMove = MoveTo(_currentlyDragging, _currentHover.x, _currentHover.y);
-            if (!validMove)
-                _currentlyDragging.SetPosition(GetTileCenter(previousPosition.x, previousPosition.y));
-            _currentlyDragging = null;
-            RemoveHighlightTiles();
-        }
-    }
-    private void OnRelease(InputAction.CallbackContext obj)
-    {
-        OnReleaseRpc();
-    }
-    private void HighlightTiles()
-    {
-        for (int i = 0; i < _availableMoves.Count; i++)
-        {
-            _tiles[_availableMoves[i].x, _availableMoves[i].y].layer = LayerMask.NameToLayer("Highlight");
-        }
-    }
-    private void RemoveHighlightTiles()
-    {
-        for (int i = 0; i < _availableMoves.Count; i++)
-        {
-            _tiles[_availableMoves[i].x, _availableMoves[i].y].layer = LayerMask.NameToLayer("Tile");
-        }
-        _availableMoves.Clear();
-    }
-    private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)
+    public bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)
     {
         for (int i = 0; i < moves.Count; i++)
         {
@@ -379,12 +305,7 @@ public class GameManager : NetworkBehaviour
         }
         return false;
     }
-    [ObserversRpc]
-    private void MoveToRpc(ChessPiece cp, int x, int y)
-    {
-        MoveTo(cp,x,y);
-    }
-    private bool MoveTo(ChessPiece cp, int x, int y)
+    public bool MoveTo(ChessPiece cp, int x, int y)
     {
         if (!ContainsValidMove(ref _availableMoves, new Vector2Int(x, y))) return false;
         Vector2Int previousPosition = new(cp.currentX, cp.currentY);
@@ -428,13 +349,13 @@ public class GameManager : NetworkBehaviour
 
         return true;
     }
-    private Vector2Int LookupTileIndex(GameObject hitInfo)
+    public Vector2Int LookupTileIndex(GameObject hitInfo)
     {
         for (int x = 0; x < TILE_COUNT_X; x++)
         {
             for (int y = 0; y < TILE_COUNT_Y; y++)
             {
-                if (_tiles[x, y] == hitInfo)
+                if (tiles[x, y] == hitInfo)
                 {
                     return new Vector2Int(x, y);
                 }
@@ -542,25 +463,7 @@ public class GameManager : NetworkBehaviour
             }
         }
     }
-    private void PreventCheck()
-    {
-        ChessPiece targetKing = null;
-        for (int x = 0; x < TILE_COUNT_X; x++)
-        {
-            for (int y = 0; y < TILE_COUNT_Y; y++)
-            {
-                if(_chessPieces[x, y]!= null)
-                {
-                    if (_chessPieces[x, y].piece == EPiece.King && _chessPieces[x,y].team == _currentlyDragging.team) 
-                    {
-                        targetKing = _chessPieces[x, y];
-                    }
-                }
-            }
-        }
-        SimulateForSinglePiece(_currentlyDragging, ref _availableMoves, targetKing);
-    }
-    private void SimulateForSinglePiece(ChessPiece chessPiece,ref List<Vector2Int> moves, ChessPiece targetKing)
+    public void SimulateForSinglePiece(ChessPiece chessPiece,ref List<Vector2Int> moves, ChessPiece targetKing)
     {
         int actualX = chessPiece.currentX;
         int actualY = chessPiece.currentY;
@@ -685,6 +588,12 @@ public class GameManager : NetworkBehaviour
     #endregion
     #endregion
 }
+[System.Serializable]
+public class ClientParameters
+{
+    public List<MatchPlayer> players;
+}
+
 [System.Serializable]
 public class SpawnParameters
 {
