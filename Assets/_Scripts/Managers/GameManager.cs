@@ -24,20 +24,17 @@ public class GameManager : NetworkBehaviour
     [Header("Prefabs & Materials")]
     [SerializeField] GameObject _board;
     [SerializeField] Skins _skins;
-    [Header("Players")]
-    public ClientParameters clientParameters;
     #endregion
     #region LOGIC
-    //private ChessControls _chessControls;
-    public ChessPiece[,] _chessPieces;
-    public List<Vector2Int> _availableMoves = new();
-    public ESpecialMove _eSpecialMove;
-    public List<Vector2Int[]> _moveList = new();
+    [HideInInspector] public ChessPiece[,] _chessPieces;
+    [HideInInspector] public List<Vector2Int> _availableMoves = new();
+    [HideInInspector] public ESpecialMove _eSpecialMove;
+    [HideInInspector] public List<Vector2Int[]> _moveList = new();
     private const int TILE_COUNT_X = 8;
     private const int TILE_COUNT_Y = 8;
-    public GameObject[,] tiles;
+    [HideInInspector] public GameObject[,] tiles;
     Vector3 _bounds;
-    public bool _isWhiteTurn;
+    [HideInInspector] public bool _isWhiteTurn;
     #endregion
     #endregion
     #region ENGINE
@@ -48,38 +45,37 @@ public class GameManager : NetworkBehaviour
     private void Awake()
     {
         GenerateAllTiles(_spawnParameters.tileSize, TILE_COUNT_X, TILE_COUNT_Y);
-
     }
     #endregion
     #region MEMBER METHODS
     public void StartGame()
     {
+        if (Managers.Instance.ClientManager.players.Count == 2)
+        {
+            _isWhiteTurn = true;
+            SpawnAllPieces();
+            PositionAllPieces();
+            RpcStartGame();
+        }
+    }
+    [ObserversRpc]
+    private void RpcStartGame()
+    {
         _isWhiteTurn = true;
         SpawnAllPieces();
         PositionAllPieces();
     }
-    [ObserversRpc]
-    private void CheckmateRpc(ETeam winner)
-    {
-        DisplayVictory(winner);
-
-    }
     public void CheckMate(ETeam winner)
     {
-        CheckmateRpc( winner);
+        DisplayVictory(winner);
     }
-    [ObserversRpc]
-    private void DisplayVictoryRpc(ETeam winner)
+    public void DisplayVictory(ETeam winner)
     {
         _victoryScreen.SetActive(true);
         _victoryText.text = winner.ToString() + " Team Won!";
     }
-    public void DisplayVictory(ETeam winner)
-    {
-        DisplayVictoryRpc(winner);
-    }
-    [ObserversRpc]
-    private void OnResetButtonRpc()
+
+    public void OnResetButton()
     {
         //UI
         _victoryScreen.SetActive(false);
@@ -110,13 +106,7 @@ public class GameManager : NetworkBehaviour
         _deathParameters.deadWhites.Clear();
         _deathParameters.deadBlacks.Clear();
 
-        SpawnAllPieces();
-        PositionAllPieces();
-        _isWhiteTurn = true;
-    }
-    public void OnResetButton()
-    {
-        OnResetButtonRpc();
+        StartGame();
     }
     public void OnExitButton()
     {
@@ -213,7 +203,7 @@ public class GameManager : NetworkBehaviour
         {
             for (int j = 0; j < TILE_COUNT_Y; j++)
             {
-                flattenedChessPieces[i * TILE_COUNT_Y + j] = _chessPieces[i, j]; 
+                flattenedChessPieces[i * TILE_COUNT_Y + j] = _chessPieces[i, j];
             }
         }
         #endregion
@@ -264,15 +254,6 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region POSITIONING
-    [ObserversRpc]
-    private void ObserversRpcPositionAllPieces()
-    {
-        Debug.Log("Observer");
-        for (int x = 0; x < TILE_COUNT_X; x++)
-            for (int y = 0; y < TILE_COUNT_Y; y++)
-                if (_chessPieces[x, y] != null)
-                    PositionSinglePiece(x, y);
-    }
     public void PositionAllPieces()
     {
         Debug.Log("Home");
@@ -280,7 +261,6 @@ public class GameManager : NetworkBehaviour
             for (int y = 0; y < TILE_COUNT_Y; y++)
                 if (_chessPieces[x, y] != null)
                     PositionSinglePiece(x, y);
-        ObserversRpcPositionAllPieces();
     }
     private void PositionSinglePiece(int x, int y, bool force = false)
     {
@@ -308,7 +288,6 @@ public class GameManager : NetworkBehaviour
     public bool MoveTo(ChessPiece cp, int x, int y)
     {
         if (!ContainsValidMove(ref _availableMoves, new Vector2Int(x, y))) return false;
-        Vector2Int previousPosition = new(cp.currentX, cp.currentY);
 
         if (_chessPieces[x, y] != null)
         {
@@ -332,6 +311,52 @@ public class GameManager : NetworkBehaviour
                 ocp.SetPosition(new Vector3(-(_spawnParameters.tileSize + 1f), _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, _spawnParameters.tileSize * (_deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.right * _deathParameters.deathSpacing) * _deathParameters.deadBlacks.Count);
             }
         }
+        UpdateChessPiecePosition(cp, x, y);
+
+
+        return true;
+    }
+    [ObserversRpc]
+    private void RpcUpdateChessPiecePosition(ChessPiece cp, int x, int y)
+    {
+        Vector2Int previousPosition = new(cp.currentX, cp.currentY);
+
+        _chessPieces[x, y] = cp;
+        _chessPieces[previousPosition.x, previousPosition.y] = null;
+        if (_chessPieces[x, y])
+        {
+            PositionSinglePiece(x, y);
+            _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
+            ProcessSpecialMove();
+            if (CheckForCheckmate())
+            {
+                CheckMate(cp.team);
+            }
+        }
+        //_isWhiteTurn = !_isWhiteTurn;
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdUpdateChessPiecePosition(ChessPiece cp, int x, int y)
+    {
+        RpcUpdateChessPiecePosition(cp, x, y);
+        Vector2Int previousPosition = new(cp.currentX, cp.currentY);
+
+        _chessPieces[x, y] = cp;
+        _chessPieces[previousPosition.x, previousPosition.y] = null;
+        PositionSinglePiece(x, y);
+        //_isWhiteTurn = !_isWhiteTurn;
+
+        _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
+        ProcessSpecialMove();
+        if (CheckForCheckmate())
+        {
+            CheckMate(cp.team);
+        }
+    }
+    private void UpdateChessPiecePosition(ChessPiece cp, int x, int y)
+    {
+        CmdUpdateChessPiecePosition(cp, x, y);
+        Vector2Int previousPosition = new(cp.currentX, cp.currentY);
 
         _chessPieces[x, y] = cp;
         _chessPieces[previousPosition.x, previousPosition.y] = null;
@@ -339,16 +364,16 @@ public class GameManager : NetworkBehaviour
         PositionSinglePiece(x, y);
 
         _isWhiteTurn = !_isWhiteTurn;
-        _moveList.Add(new Vector2Int[] {previousPosition, new(x, y) });
+        _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
+
 
         ProcessSpecialMove();
-        if (CheckForCheckmate()) 
+        if (CheckForCheckmate())
         {
             CheckMate(cp.team);
         }
-
-        return true;
     }
+
     public Vector2Int LookupTileIndex(GameObject hitInfo)
     {
         for (int x = 0; x < TILE_COUNT_X; x++)
@@ -591,7 +616,6 @@ public class GameManager : NetworkBehaviour
 [System.Serializable]
 public class ClientParameters
 {
-    public List<MatchPlayer> players;
 }
 
 [System.Serializable]

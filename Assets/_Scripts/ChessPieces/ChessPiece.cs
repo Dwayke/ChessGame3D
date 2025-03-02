@@ -23,17 +23,24 @@ public class ChessPiece : NetworkBehaviour
     }
     private void Update()
     {
-        ApplyTransformRpc();
+        CmdApplyTransform();
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdApplyTransform()
+    {
+        transform.position = Vector3.Lerp(transform.position, _desiredPosition, Time.deltaTime * 10);
+        transform.localScale = Vector3.Lerp(transform.localScale, _desiredScale, Time.deltaTime * 10);
+        RpcApplyTransform();
     }
     [ObserversRpc]
-    private void ApplyTransformRpc()
+    private void RpcApplyTransform()
     {
         transform.position = Vector3.Lerp(transform.position, _desiredPosition, Time.deltaTime * 10);
         transform.localScale = Vector3.Lerp(transform.localScale, _desiredScale, Time.deltaTime * 10);
     }
     #endregion
     #region MEMBER
-    [ObserversRpc]
+    [ObserversRpc(ExcludeOwner = true)]
     private void RpcSetPosition(Vector3 position, bool force = false)
     {
         _desiredPosition = position;
@@ -41,38 +48,55 @@ public class ChessPiece : NetworkBehaviour
         {
             transform.position = _desiredPosition;
         }
-        else
-        {
-
-        }
     }
-    [ServerRpc(RequireOwnership = false)]
-    public void CmdSetPosition(Vector3 position, bool force = false, NetworkConnection conn = null)
+    [ServerRpc(RequireOwnership =false)]
+    private void CmdSetPosition(Vector3 position, bool force = false)
     {
-        //if (conn == LocalConnection) return;
-        Debug.Log("howaa beyed5ol hena?");
         RpcSetPosition(position, force);
+        _desiredPosition = position;
+        if (force)
+        {
+            transform.position = _desiredPosition;
+        }
     }
     public virtual void SetPosition(Vector3 position, bool force = false)
     {
-        RpcSetPosition(position,force);
+        CmdSetPosition(position, force);
+        RpcSetPosition(position, force);
+        _desiredPosition = position;
+        if (force)
+        {
+            transform.position = _desiredPosition;
+        }
     }
     [ObserversRpc]
-    private void SetScaleRPC(Vector3 scale, bool force = false)
+    private void RpcSetScale(Vector3 scale, bool force = false)
     {
         _desiredScale = scale;
         if (force)
         {
             transform.localScale = _desiredScale;
         }
-        else
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdSetScale(Vector3 scale, bool force = false)
+    {
+        RpcSetScale(scale, force);
+        _desiredScale = scale;
+        if (force)
         {
-
+            transform.localScale = _desiredScale;
         }
     }
     public virtual void SetScale(Vector3 scale, bool force = false)
     {
-        SetScaleRPC(scale, force);
+        CmdSetScale(scale, force);
+        RpcSetScale(scale, force);
+        _desiredScale = scale;
+        if (force)
+        {
+            transform.localScale = _desiredScale;
+        }
     }
     public virtual ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {

@@ -30,7 +30,7 @@ public class NetworkPlayerController : NetworkBehaviour
     }
     void Update()
     {
-        if (!base.IsOwner) return;
+        if (!IsOwner) return;
         if (!_currentCamera)
         {
             _currentCamera = GetComponent<Camera>();
@@ -60,20 +60,30 @@ public class NetworkPlayerController : NetworkBehaviour
         {
             if (_currentHover != -Vector2Int.one)
             {
-                Managers.Instance.GameManager.tiles[_currentHover.x, _currentHover.y].layer 
-                    = (Managers.Instance.GameManager.ContainsValidMove(ref Managers.Instance.GameManager._availableMoves, _currentHover)) 
-                    ? LayerMask.NameToLayer("Highlight") 
+                Managers.Instance.GameManager.tiles[_currentHover.x, _currentHover.y].layer
+                    = (Managers.Instance.GameManager.ContainsValidMove(ref Managers.Instance.GameManager._availableMoves, _currentHover))
+                    ? LayerMask.NameToLayer("Highlight")
                     : LayerMask.NameToLayer("Tile");
                 _currentHover = -Vector2Int.one;
             }
-            if (_currentlyDragging && Input.GetMouseButtonUp(0))
+        }
+        CheckDraggedPiece(ray);
+    }
+    private void CheckDraggedPiece(Ray ray)
+    {
+        if (_currentlyDragging)
+        {
+            Plane horizontalPlane = new(Vector3.up, Vector3.up * Managers.Instance.GameManager._spawnParameters.yOffset);
+            if (horizontalPlane.Raycast(ray, out float distance))
             {
-                _currentlyDragging.SetPosition(Managers.Instance.GameManager.GetTileCenter(_currentlyDragging.currentX, _currentlyDragging.currentY));
-                _currentlyDragging = null;
-                RemoveHighlightTiles();
+                _currentlyDragging.SetPosition(ray.GetPoint(distance) + Vector3.up * Managers.Instance.GameManager.dragYOffset);
             }
         }
-
+        CmdCheckDraggedPiece(ray);
+    }
+    [ServerRpc(RequireOwnership =false)]
+    private void CmdCheckDraggedPiece(Ray ray)
+    {
         if (_currentlyDragging)
         {
             Plane horizontalPlane = new(Vector3.up, Vector3.up * Managers.Instance.GameManager._spawnParameters.yOffset);
@@ -83,7 +93,7 @@ public class NetworkPlayerController : NetworkBehaviour
             }
         }
     }
-    private void OnClickRpc()   
+    private void OnClick(InputAction.CallbackContext obj)
     {
         if (!_currentCamera) return;
         if (_currentHover != -Vector2Int.one)
@@ -94,18 +104,17 @@ public class NetworkPlayerController : NetworkBehaviour
                 {
                     _currentlyDragging = Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y];
                     Managers.Instance.GameManager._availableMoves = _currentlyDragging.GetAvailableMoves(ref Managers.Instance.GameManager._chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-                    Managers.Instance.GameManager._eSpecialMove = _currentlyDragging.GetSpecialMoves(ref Managers.Instance.GameManager ._chessPieces, ref Managers.Instance.GameManager._moveList, ref Managers.Instance.GameManager._availableMoves);
+                    Managers.Instance.GameManager._eSpecialMove = _currentlyDragging.GetSpecialMoves(ref Managers.Instance.GameManager._chessPieces, ref Managers.Instance.GameManager._moveList, ref Managers.Instance.GameManager._availableMoves);
+                    Debug.Log(Managers.Instance.GameManager._chessPieces[_currentlyDragging.currentX,_currentlyDragging.currentY]);
+                    //Debug.Log(Managers.Instance.GameManager._moveList);
+                    Debug.Log(Managers.Instance.GameManager._availableMoves.Count);
                     PreventCheck();
                     HighlightTiles();
                 }
             }
         }
     }
-    private void OnClick(InputAction.CallbackContext obj)
-    {
-        OnClickRpc();
-    }
-    private void OnReleaseRpc()
+    private void OnRelease(InputAction.CallbackContext obj)
     {
         if (_currentlyDragging != null)
         {
@@ -116,10 +125,6 @@ public class NetworkPlayerController : NetworkBehaviour
             _currentlyDragging = null;
             RemoveHighlightTiles();
         }
-    }
-    private void OnRelease(InputAction.CallbackContext obj)
-    {
-        OnReleaseRpc();
     }
     private void HighlightTiles()
     {

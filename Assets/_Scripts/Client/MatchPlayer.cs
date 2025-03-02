@@ -6,21 +6,10 @@ public class MatchPlayer : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        ServerRpcCheckPlayerCount();
+        AddPlayer();
     }
-    [ServerRpc]
-    private void ServerRpcCheckPlayerCount()
+    private void AddPlayer()
     {
-        Managers.Instance.GameManager.clientParameters.players.Add(this);
-        if (Managers.Instance.GameManager.clientParameters.players.Count==2)
-        {
-            Managers.Instance.GameManager.StartGame();
-
-            ObserversRpcCheckPlayerCount();
-        }
-    }    
-    [ObserversRpc]
-    private void ObserversRpcCheckPlayerCount()
-    {
+        Managers.Instance.ClientManager.AddPlayer(this);
     }
 }
