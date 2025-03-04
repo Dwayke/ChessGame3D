@@ -4,6 +4,7 @@ public class Managers : Singleton<Managers>
 {
     #region VAR
     public GameManager GameManager;
+    public TurnManager TurnManager;
     public ClientManager ClientManager;
     public GameUI GameUI;
     #endregion
@@ -11,6 +12,7 @@ public class Managers : Singleton<Managers>
     private void Start()
     {
         if(!GameManager)GameManager = GetComponentInChildren<GameManager>(true);
+        if(!TurnManager)TurnManager = GetComponentInChildren<TurnManager>(true);
         if(!ClientManager)ClientManager = GetComponentInChildren<ClientManager>(true);
         if(!GameUI) GameUI = GetComponentInChildren<GameUI>(true);
     }

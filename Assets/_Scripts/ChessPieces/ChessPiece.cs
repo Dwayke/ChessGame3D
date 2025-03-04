@@ -1,5 +1,7 @@
+using DG.Tweening;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,27 +22,38 @@ public class ChessPiece : NetworkBehaviour
     private void Start()
     {
         transform.rotation = Quaternion.Euler((team == ETeam.White)? Vector3.zero: new Vector3(0,180,0));
-    }
-    private void Update()
-    {
         CmdApplyTransform();
     }
     [ServerRpc(RequireOwnership = false)]
     private void CmdApplyTransform()
     {
-        transform.position = Vector3.Lerp(transform.position, _desiredPosition, Time.deltaTime * 10);
-        transform.localScale = Vector3.Lerp(transform.localScale, _desiredScale, Time.deltaTime * 10);
+        if (piece == EPiece.Knight)
+        {
+            transform.DOJump(_desiredPosition, 3, 1, 1);
+        }
+        else
+        {
+            transform.DOMove(_desiredPosition, 1);
+        }
+        transform.DOScale(_desiredScale, 5);
         RpcApplyTransform();
     }
     [ObserversRpc]
     private void RpcApplyTransform()
     {
-        transform.position = Vector3.Lerp(transform.position, _desiredPosition, Time.deltaTime * 10);
-        transform.localScale = Vector3.Lerp(transform.localScale, _desiredScale, Time.deltaTime * 10);
+        if (piece == EPiece.Knight)
+        {
+            transform.DOJump(_desiredPosition, 3, 1, 1);
+        }
+        else
+        {
+            transform.DOMove(_desiredPosition, 1);
+        }
+        transform.DOScale(_desiredScale, 5);
     }
     #endregion
     #region MEMBER
-    [ObserversRpc(ExcludeOwner = true)]
+    [ObserversRpc]
     private void RpcSetPosition(Vector3 position, bool force = false)
     {
         _desiredPosition = position;
@@ -53,6 +66,7 @@ public class ChessPiece : NetworkBehaviour
     private void CmdSetPosition(Vector3 position, bool force = false)
     {
         RpcSetPosition(position, force);
+
         _desiredPosition = position;
         if (force)
         {
@@ -62,6 +76,7 @@ public class ChessPiece : NetworkBehaviour
     public virtual void SetPosition(Vector3 position, bool force = false)
     {
         CmdSetPosition(position, force);
+        CmdApplyTransform();
         RpcSetPosition(position, force);
         _desiredPosition = position;
         if (force)
@@ -91,6 +106,7 @@ public class ChessPiece : NetworkBehaviour
     public virtual void SetScale(Vector3 scale, bool force = false)
     {
         CmdSetScale(scale, force);
+        CmdApplyTransform();
         RpcSetScale(scale, force);
         _desiredScale = scale;
         if (force)
@@ -108,6 +124,7 @@ public class ChessPiece : NetworkBehaviour
         List<Vector2Int> availableMoves = new();
         return availableMoves;
     }
+  
     #endregion
     #region LOCAL
 

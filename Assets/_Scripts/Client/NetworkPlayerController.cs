@@ -1,9 +1,11 @@
 using FishNet.Object;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class NetworkPlayerController : NetworkBehaviour
 {
+    private MatchPlayer _player;
     private ChessControls _chessControls;
     private Camera _currentCamera;
     private Vector2Int _currentHover;
@@ -15,8 +17,8 @@ public class NetworkPlayerController : NetworkBehaviour
     {
         base.OnStartClient();
         _chessControls = new ChessControls();
+        _player = GetComponent<MatchPlayer>();
         _chessControls.Gameplay.Click.performed += OnClick;
-        _chessControls.Gameplay.Release.performed += OnRelease;
         _chessControls.Gameplay.Enable();
         //serverrpc->add this to GM
     }
@@ -25,7 +27,6 @@ public class NetworkPlayerController : NetworkBehaviour
         base.OnStopClient();
 
         _chessControls.Gameplay.Click.performed -= OnClick;
-        _chessControls.Gameplay.Release.performed -= OnRelease;
         _chessControls.Gameplay.Disable();
     }
     void Update()
@@ -40,6 +41,7 @@ public class NetworkPlayerController : NetworkBehaviour
     }
     private void CheckHoverStatus()
     {
+        if (Managers.Instance.TurnManager.currentTurn != _player.team) return;
         Ray ray = _currentCamera.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit info, 100, LayerMask.GetMask("Tile", "Hover", "Highlight")))
         {
@@ -67,63 +69,36 @@ public class NetworkPlayerController : NetworkBehaviour
                 _currentHover = -Vector2Int.one;
             }
         }
-        CheckDraggedPiece(ray);
-    }
-    private void CheckDraggedPiece(Ray ray)
-    {
-        if (_currentlyDragging)
-        {
-            Plane horizontalPlane = new(Vector3.up, Vector3.up * Managers.Instance.GameManager._spawnParameters.yOffset);
-            if (horizontalPlane.Raycast(ray, out float distance))
-            {
-                _currentlyDragging.SetPosition(ray.GetPoint(distance) + Vector3.up * Managers.Instance.GameManager.dragYOffset);
-            }
-        }
-        CmdCheckDraggedPiece(ray);
-    }
-    [ServerRpc(RequireOwnership =false)]
-    private void CmdCheckDraggedPiece(Ray ray)
-    {
-        if (_currentlyDragging)
-        {
-            Plane horizontalPlane = new(Vector3.up, Vector3.up * Managers.Instance.GameManager._spawnParameters.yOffset);
-            if (horizontalPlane.Raycast(ray, out float distance))
-            {
-                _currentlyDragging.SetPosition(ray.GetPoint(distance) + Vector3.up * Managers.Instance.GameManager.dragYOffset);
-            }
-        }
     }
     private void OnClick(InputAction.CallbackContext obj)
     {
+        if (Managers.Instance.TurnManager.currentTurn != _player.team) return;
         if (!_currentCamera) return;
         if (_currentHover != -Vector2Int.one)
         {
-            if (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y] != null)
+            if (_currentlyDragging == null)
             {
-                if ((Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && Managers.Instance.GameManager._isWhiteTurn) || (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && !Managers.Instance.GameManager._isWhiteTurn))
+                if (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y] != null)
                 {
-                    _currentlyDragging = Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y];
-                    Managers.Instance.GameManager._availableMoves = _currentlyDragging.GetAvailableMoves(ref Managers.Instance.GameManager._chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-                    Managers.Instance.GameManager._eSpecialMove = _currentlyDragging.GetSpecialMoves(ref Managers.Instance.GameManager._chessPieces, ref Managers.Instance.GameManager._moveList, ref Managers.Instance.GameManager._availableMoves);
-                    Debug.Log(Managers.Instance.GameManager._chessPieces[_currentlyDragging.currentX,_currentlyDragging.currentY]);
-                    //Debug.Log(Managers.Instance.GameManager._moveList);
-                    Debug.Log(Managers.Instance.GameManager._availableMoves.Count);
-                    PreventCheck();
-                    HighlightTiles();
+                    if ((Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && Managers.Instance.TurnManager.currentTurn == ETeam.White) || (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && Managers.Instance.TurnManager.currentTurn == ETeam.Black))
+                    {
+                        _currentlyDragging = Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y];
+                        Managers.Instance.GameManager.CheckMoves(_currentlyDragging, _currentHover);
+                        PreventCheck();
+                        HighlightTiles();
+                    }
                 }
             }
-        }
-    }
-    private void OnRelease(InputAction.CallbackContext obj)
-    {
-        if (_currentlyDragging != null)
-        {
-            Vector2Int previousPosition = new(_currentlyDragging.currentX, _currentlyDragging.currentY);
-            bool validMove = Managers.Instance.GameManager.MoveTo(_currentlyDragging, _currentHover.x, _currentHover.y);
-            if (!validMove)
-                _currentlyDragging.SetPosition(Managers.Instance.GameManager.GetTileCenter(previousPosition.x, previousPosition.y));
-            _currentlyDragging = null;
-            RemoveHighlightTiles();
+            else
+            {
+                Vector2Int previousPosition = new(_currentlyDragging.currentX, _currentlyDragging.currentY);
+                bool validMove = Managers.Instance.GameManager.MoveTo(_currentlyDragging, _currentHover.x, _currentHover.y);
+                if (!validMove)
+                    _currentlyDragging.SetPosition(Managers.Instance.GameManager.GetTileCenter(previousPosition.x, previousPosition.y));
+                _currentlyDragging = null;
+                RemoveHighlightTiles();
+            }
+
         }
     }
     private void HighlightTiles()

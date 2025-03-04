@@ -27,6 +27,7 @@ public class GameManager : NetworkBehaviour
     #endregion
     #region LOGIC
     [HideInInspector] public ChessPiece[,] _chessPieces;
+    [HideInInspector] public ChessPiece[,] _deserializedChessPieces;
     [HideInInspector] public List<Vector2Int> _availableMoves = new();
     [HideInInspector] public ESpecialMove _eSpecialMove;
     [HideInInspector] public List<Vector2Int[]> _moveList = new();
@@ -34,7 +35,6 @@ public class GameManager : NetworkBehaviour
     private const int TILE_COUNT_Y = 8;
     [HideInInspector] public GameObject[,] tiles;
     Vector3 _bounds;
-    [HideInInspector] public bool _isWhiteTurn;
     #endregion
     #endregion
     #region ENGINE
@@ -52,7 +52,6 @@ public class GameManager : NetworkBehaviour
     {
         if (Managers.Instance.ClientManager.players.Count == 2)
         {
-            _isWhiteTurn = true;
             SpawnAllPieces();
             PositionAllPieces();
             RpcStartGame();
@@ -61,7 +60,7 @@ public class GameManager : NetworkBehaviour
     [ObserversRpc]
     private void RpcStartGame()
     {
-        _isWhiteTurn = true;
+
         SpawnAllPieces();
         PositionAllPieces();
     }
@@ -166,11 +165,10 @@ public class GameManager : NetworkBehaviour
     #endregion
     #region SPAWN PIECES
     [Server]
-    private void ObserversRpcSpawnAllPieces()
+    private void ServerSpawnAllPieces()
     {
         Debug.Log("Spawn All Pieces");
         _chessPieces = new ChessPiece[TILE_COUNT_Y, TILE_COUNT_Y];
-        var flattenedChessPieces = new ChessPiece[TILE_COUNT_X * TILE_COUNT_Y];
         #region WHITE
         _chessPieces[0, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White, _skins.whitePlayerSkin);
         _chessPieces[1, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White, _skins.whitePlayerSkin);
@@ -199,6 +197,8 @@ public class GameManager : NetworkBehaviour
         {
             _chessPieces[i, 6] = SpawnSinglePiece(EPiece.Pawn, ETeam.Black, _skins.blackPlayerSkin);
         }
+        #endregion
+        var flattenedChessPieces = new ChessPiece[TILE_COUNT_X * TILE_COUNT_Y];
         for (int i = 0; i < TILE_COUNT_X - 1; i++)
         {
             for (int j = 0; j < TILE_COUNT_Y; j++)
@@ -206,35 +206,49 @@ public class GameManager : NetworkBehaviour
                 flattenedChessPieces[i * TILE_COUNT_Y + j] = _chessPieces[i, j];
             }
         }
-        #endregion
+        ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+
+        // Iterate over each row (x) and column (y) to populate the 2D array.
+        for (int x = 0; x < TILE_COUNT_X; x++)
+        {
+            for (int y = 0; y < TILE_COUNT_Y; y++)
+            {
+                // Calculate the index in the flattened list using row-major order.
+                int index = x * TILE_COUNT_Y + y;
+
+                // Assign the ChessPiece from the list to the corresponding position in the 2D array.
+                reconstructed[x, y] = flattenedChessPieces[index];
+            }
+        }
+        _deserializedChessPieces = reconstructed;
         Debug.Log($"Assigning pieces, first piece: {_chessPieces[0, 0]}");
         AssignChessArray(flattenedChessPieces.ToList());
     }
     [ObserversRpc]
     public void AssignChessArray(List<ChessPiece> chessPieces)
     {
-        Debug.Log("assigning chess pieces");
-        if (chessPieces == null)
-        {
-            Debug.Log("Chess pieces null!");
-        }
-        // Reconstruct the 2D array.
-        ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
-        for (int x = 0; x < TILE_COUNT_X; x++)
-        {
-            for (int y = 0; y < TILE_COUNT_Y; y++)
+            Debug.Log("assigning chess pieces");
+            if (chessPieces == null)
             {
-                // Since the flattening was done in row-major order, we compute the index accordingly.
-                reconstructed[x, y] = chessPieces[x * TILE_COUNT_Y + y];
+                Debug.Log("Chess pieces null!");
             }
-        }
-        Debug.Log($"Assigning pieces, first piece: {reconstructed[0, 0]}");
-        _chessPieces = reconstructed;
+            // Reconstruct the 2D array.
+            ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+            for (int x = 0; x < TILE_COUNT_X; x++)
+            {
+                for (int y = 0; y < TILE_COUNT_Y; y++)
+                {
+                    // Since the flattening was done in row-major order, we compute the index accordingly.
+                    reconstructed[x, y] = chessPieces[x * TILE_COUNT_Y + y];
+                }
+            }
+            Debug.Log($"Assigning pieces, first piece: {reconstructed[0, 0]}");
+            _chessPieces = reconstructed;
     }
     public void SpawnAllPieces()
     {
         Debug.Log("initSpawn All Pieces");
-        ObserversRpcSpawnAllPieces();
+        ServerSpawnAllPieces();
     }
     private ChessPiece SpawnSinglePiece(EPiece pieceType, ETeam team, ESkin skin)
     {
@@ -254,6 +268,44 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region POSITIONING
+    //public ChessPiece[,] DeserializeChessArray(List<ChessPiece> chessPieces)
+    //{
+    //    // Check if the input list is null or empty.
+    //    if (chessPieces == null || chessPieces.Count == 0)
+    //    {
+    //        Debug.LogError("Chess pieces list is null or empty!");
+    //        return null;
+    //    }
+
+    //    // Ensure the list has the correct number of elements for the 2D array.
+    //    if (chessPieces.Count != TILE_COUNT_X * TILE_COUNT_Y)
+    //    {
+    //        Debug.LogError("Chess pieces list has an incorrect number of elements!");
+    //        return null;
+    //    }
+
+    //    // Reconstruct the 2D array.
+    //    ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+
+    //    // Iterate over each row (x) and column (y) to populate the 2D array.
+    //    for (int x = 0; x < TILE_COUNT_X; x++)
+    //    {
+    //        for (int y = 0; y < TILE_COUNT_Y; y++)
+    //        {
+    //            // Calculate the index in the flattened list using row-major order.
+    //            int index = x * TILE_COUNT_Y + y;
+
+    //            // Assign the ChessPiece from the list to the corresponding position in the 2D array.
+    //            reconstructed[x, y] = chessPieces[index];
+    //        }
+    //    }
+
+    //    // Log the first piece in the reconstructed array for debugging.
+    //    Debug.Log($"Deserialized first piece: {reconstructed[0, 0]}");
+
+    //    // Return the reconstructed 2D array.
+    //    return reconstructed;
+    //}
     public void PositionAllPieces()
     {
         Debug.Log("Home");
@@ -274,6 +326,12 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region OPS
+    public void CheckMoves(ChessPiece currentlyDragging, Vector2Int currentHover)
+    {
+        currentlyDragging = _chessPieces[currentHover.x, currentHover.y];
+        _availableMoves = currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
+        _eSpecialMove =   currentlyDragging.GetSpecialMoves(ref _chessPieces, ref _moveList, ref _availableMoves);
+    }
     public bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)
     {
         for (int i = 0; i < moves.Count; i++)
@@ -333,7 +391,9 @@ public class GameManager : NetworkBehaviour
                 CheckMate(cp.team);
             }
         }
-        //_isWhiteTurn = !_isWhiteTurn;
+        Managers.Instance.TurnManager.CmdSwitchTurn();
+        Managers.Instance.TurnManager.ResetTimer();
+
     }
     [ServerRpc(RequireOwnership = false)]
     private void CmdUpdateChessPiecePosition(ChessPiece cp, int x, int y)
@@ -344,8 +404,8 @@ public class GameManager : NetworkBehaviour
         _chessPieces[x, y] = cp;
         _chessPieces[previousPosition.x, previousPosition.y] = null;
         PositionSinglePiece(x, y);
-        //_isWhiteTurn = !_isWhiteTurn;
-
+        Managers.Instance.TurnManager.CmdSwitchTurn();
+        Managers.Instance.TurnManager.ResetTimer();
         _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
         ProcessSpecialMove();
         if (CheckForCheckmate())
@@ -363,7 +423,9 @@ public class GameManager : NetworkBehaviour
 
         PositionSinglePiece(x, y);
 
-        _isWhiteTurn = !_isWhiteTurn;
+        Managers.Instance.TurnManager.CmdSwitchTurn();
+        Managers.Instance.TurnManager.ResetTimer();
+
         _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
 
 
@@ -561,7 +623,6 @@ public class GameManager : NetworkBehaviour
     {
         var lastMove = _moveList[^1];
         ETeam targetTeam = (_chessPieces[lastMove[1].x, lastMove[1].y].team == ETeam.White) ? ETeam.Black:ETeam.White;
-
         List<ChessPiece> attackingPieces = new();
         List<ChessPiece> defendingPieces = new();
         ChessPiece targetKing = null;

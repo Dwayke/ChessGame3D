@@ -1,3 +1,4 @@
+using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -43,8 +44,9 @@ public class Pawn : ChessPiece
         return availableMoves;
     }
 
-    public override ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
+    public override ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref  List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {
+        //Debug.Log("CP.Length = "+chesspiece.Length); Debug.Log("ML.Length = "+moveList.Count); Debug.Log("AM.Length = "+availableMoves.Count);
         int direction = (team == ETeam.White) ? 1 : -1;
         if ((team == ETeam.White && currentY == 6)||(team == ETeam.Black&&currentY ==1))
         {
@@ -55,6 +57,8 @@ public class Pawn : ChessPiece
         if (moveList.Count>0)
         {
             Vector2Int[] lastMove = moveList[^1];
+            Debug.Log("Last Used Chesspiece: "+chesspiece[lastMove[1].x, lastMove[1].y]);
+            Debug.Log("Last Move: "+lastMove[1]);
             if (chesspiece[lastMove[1].x,lastMove[1].y].piece == EPiece.Pawn)
             {
                 if (Mathf.Abs(lastMove[0].y- lastMove[1].y) == 2)
