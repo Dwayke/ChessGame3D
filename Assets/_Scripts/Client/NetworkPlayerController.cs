@@ -20,7 +20,6 @@ public class NetworkPlayerController : NetworkBehaviour
         _player = GetComponent<MatchPlayer>();
         _chessControls.Gameplay.Click.performed += OnClick;
         _chessControls.Gameplay.Enable();
-        //serverrpc->add this to GM
     }
     public override void OnStopClient()
     {
@@ -72,29 +71,38 @@ public class NetworkPlayerController : NetworkBehaviour
     }
     private void OnClick(InputAction.CallbackContext obj)
     {
+        Debug.Log("Click");
         if (Managers.Instance.TurnManager.currentTurn != _player.team) return;
         if (!_currentCamera) return;
         if (_currentHover != -Vector2Int.one)
         {
             if (_currentlyDragging == null)
             {
-                if (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y] != null)
+                Debug.Log("New Currently Dragging");
+
+                if (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y] != null && (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && Managers.Instance.TurnManager.currentTurn == ETeam.White) || (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && Managers.Instance.TurnManager.currentTurn == ETeam.Black))
                 {
-                    if ((Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && Managers.Instance.TurnManager.currentTurn == ETeam.White) || (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && Managers.Instance.TurnManager.currentTurn == ETeam.Black))
-                    {
-                        _currentlyDragging = Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y];
-                        Managers.Instance.GameManager.CheckMoves(_currentlyDragging, _currentHover);
-                        PreventCheck();
-                        HighlightTiles();
-                    }
+                    Debug.Log("Found the piece");
+                    _currentlyDragging = Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y];
+                    Managers.Instance.GameManager.CheckMoves(_currentlyDragging);
+                    PreventCheck();
+                    HighlightTiles();
                 }
             }
             else
             {
+                Debug.Log("Existing Currently Dragging");
+
                 Vector2Int previousPosition = new(_currentlyDragging.currentX, _currentlyDragging.currentY);
                 bool validMove = Managers.Instance.GameManager.MoveTo(_currentlyDragging, _currentHover.x, _currentHover.y);
                 if (!validMove)
+                {
                     _currentlyDragging.SetPosition(Managers.Instance.GameManager.GetTileCenter(previousPosition.x, previousPosition.y));
+                }
+                else
+                {
+                    _currentlyDragging.SetPosition(Managers.Instance.GameManager.GetTileCenter(_currentHover.x, _currentHover.y));
+                }
                 _currentlyDragging = null;
                 RemoveHighlightTiles();
             }

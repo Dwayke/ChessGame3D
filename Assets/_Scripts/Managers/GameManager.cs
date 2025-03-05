@@ -64,7 +64,14 @@ public class GameManager : NetworkBehaviour
         SpawnAllPieces();
         PositionAllPieces();
     }
+    [ServerRpc]
     public void CheckMate(ETeam winner)
+    {
+        RpcCheckMate(winner);
+        DisplayVictory(winner);
+    }
+    [ObserversRpc]
+    public void RpcCheckMate(ETeam winner)
     {
         DisplayVictory(winner);
     }
@@ -198,6 +205,7 @@ public class GameManager : NetworkBehaviour
             _chessPieces[i, 6] = SpawnSinglePiece(EPiece.Pawn, ETeam.Black, _skins.blackPlayerSkin);
         }
         #endregion
+        //RpcSpawnAllPieces();
         var flattenedChessPieces = new ChessPiece[TILE_COUNT_X * TILE_COUNT_Y];
         for (int i = 0; i < TILE_COUNT_X - 1; i++)
         {
@@ -223,6 +231,40 @@ public class GameManager : NetworkBehaviour
         _deserializedChessPieces = reconstructed;
         Debug.Log($"Assigning pieces, first piece: {_chessPieces[0, 0]}");
         AssignChessArray(flattenedChessPieces.ToList());
+    }
+    [ObserversRpc]
+    private void RpcSpawnAllPieces()
+    {
+        _chessPieces = new ChessPiece[TILE_COUNT_Y, TILE_COUNT_Y];
+        #region WHITE
+        _chessPieces[0, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[1, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[2, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[3, 0] = SpawnSinglePiece(EPiece.Queen, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[4, 0] = SpawnSinglePiece(EPiece.King, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[5, 0] = SpawnSinglePiece(EPiece.Bishop, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[6, 0] = SpawnSinglePiece(EPiece.Knight, ETeam.White, _skins.whitePlayerSkin);
+        _chessPieces[7, 0] = SpawnSinglePiece(EPiece.Rook, ETeam.White, _skins.whitePlayerSkin);
+        for (int i = 0; i < TILE_COUNT_X; i++)
+        {
+            _chessPieces[i, 1] = SpawnSinglePiece(EPiece.Pawn, ETeam.White, _skins.whitePlayerSkin);
+        }
+        #endregion
+
+        #region BLACK                                                     
+        _chessPieces[0, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[1, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[2, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[3, 7] = SpawnSinglePiece(EPiece.Queen, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[4, 7] = SpawnSinglePiece(EPiece.King, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[5, 7] = SpawnSinglePiece(EPiece.Bishop, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[6, 7] = SpawnSinglePiece(EPiece.Knight, ETeam.Black, _skins.blackPlayerSkin);
+        _chessPieces[7, 7] = SpawnSinglePiece(EPiece.Rook, ETeam.Black, _skins.blackPlayerSkin);
+        for (int i = 0; i < TILE_COUNT_X; i++)
+        {
+            _chessPieces[i, 6] = SpawnSinglePiece(EPiece.Pawn, ETeam.Black, _skins.blackPlayerSkin);
+        }
+        #endregion
     }
     [ObserversRpc]
     public void AssignChessArray(List<ChessPiece> chessPieces)
@@ -326,9 +368,8 @@ public class GameManager : NetworkBehaviour
     }
     #endregion
     #region OPS
-    public void CheckMoves(ChessPiece currentlyDragging, Vector2Int currentHover)
+    public void CheckMoves(ChessPiece currentlyDragging)
     {
-        currentlyDragging = _chessPieces[currentHover.x, currentHover.y];
         _availableMoves = currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
         _eSpecialMove =   currentlyDragging.GetSpecialMoves(ref _chessPieces, ref _moveList, ref _availableMoves);
     }
@@ -369,7 +410,7 @@ public class GameManager : NetworkBehaviour
                 ocp.SetPosition(new Vector3(-(_spawnParameters.tileSize + 1f), _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, _spawnParameters.tileSize * (_deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.right * _deathParameters.deathSpacing) * _deathParameters.deadBlacks.Count);
             }
         }
-        UpdateChessPiecePosition(cp, x, y);
+        CmdUpdateChessPiecePosition(cp, x, y);
 
 
         return true;
@@ -399,23 +440,7 @@ public class GameManager : NetworkBehaviour
     private void CmdUpdateChessPiecePosition(ChessPiece cp, int x, int y)
     {
         RpcUpdateChessPiecePosition(cp, x, y);
-        Vector2Int previousPosition = new(cp.currentX, cp.currentY);
 
-        _chessPieces[x, y] = cp;
-        _chessPieces[previousPosition.x, previousPosition.y] = null;
-        PositionSinglePiece(x, y);
-        Managers.Instance.TurnManager.CmdSwitchTurn();
-        Managers.Instance.TurnManager.ResetTimer();
-        _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
-        ProcessSpecialMove();
-        if (CheckForCheckmate())
-        {
-            CheckMate(cp.team);
-        }
-    }
-    private void UpdateChessPiecePosition(ChessPiece cp, int x, int y)
-    {
-        CmdUpdateChessPiecePosition(cp, x, y);
         Vector2Int previousPosition = new(cp.currentX, cp.currentY);
 
         _chessPieces[x, y] = cp;
@@ -550,6 +575,7 @@ public class GameManager : NetworkBehaviour
             }
         }
     }
+
     public void SimulateForSinglePiece(ChessPiece chessPiece,ref List<Vector2Int> moves, ChessPiece targetKing)
     {
         int actualX = chessPiece.currentX;
@@ -674,11 +700,6 @@ public class GameManager : NetworkBehaviour
     #endregion
     #endregion
 }
-[System.Serializable]
-public class ClientParameters
-{
-}
-
 [System.Serializable]
 public class SpawnParameters
 {

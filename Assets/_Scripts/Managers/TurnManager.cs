@@ -29,7 +29,7 @@ public class TurnManager : NetworkBehaviour
     private void FixedUpdate()
     {
         _timeRemaining.Update();
-        if (_timeRemaining.Remaining <= 0)
+        if (_timeRemaining.Remaining <= 0&& Managers.Instance.ClientManager.players.Count == 2)
         {
             StartTimer();
         }
