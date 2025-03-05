@@ -29,7 +29,6 @@ public class TurnManager : NetworkBehaviour
     private void FixedUpdate()
     {
         _timeRemaining.Update();
-        Debug.Log(_timeRemaining.Remaining);
         if (_timeRemaining.Remaining <= 0)
         {
             StartTimer();
