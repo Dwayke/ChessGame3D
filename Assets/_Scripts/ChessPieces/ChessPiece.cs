@@ -35,7 +35,7 @@ public class ChessPiece : NetworkBehaviour
         {
             transform.DOMove(_desiredPosition, 1);
         }
-        transform.DOScale(_desiredScale, 5);
+        transform.DOScale(_desiredScale, 1);
         RpcApplyTransform();
     }
     [ObserversRpc]
@@ -49,7 +49,7 @@ public class ChessPiece : NetworkBehaviour
         {
             transform.DOMove(_desiredPosition, 1);
         }
-        transform.DOScale(_desiredScale, 5);
+        transform.DOScale(_desiredScale, 1);
     }
     #endregion
     #region MEMBER
@@ -62,8 +62,19 @@ public class ChessPiece : NetworkBehaviour
             transform.position = _desiredPosition;
         }
     }
+    [ServerRpc(RequireOwnership =false)]
+    private void CmdSetPosition(Vector3 position, bool force = false)
+    {
+        RpcSetPosition(position, force);
+        _desiredPosition = position;
+        if (force)
+        {
+            transform.position = _desiredPosition;
+        }
+    }
     public virtual void SetPosition(Vector3 position, bool force = false)
     {
+        CmdSetPosition(position, force);
         CmdApplyTransform();
         RpcSetPosition(position, force);
         _desiredPosition = position;

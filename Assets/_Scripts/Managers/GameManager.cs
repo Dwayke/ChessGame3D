@@ -206,7 +206,7 @@ public class GameManager : NetworkBehaviour
         }
         #endregion
         var flattenedChessPieces = new ChessPiece[TILE_COUNT_X * TILE_COUNT_Y];
-        for (int i = 0; i < TILE_COUNT_X - 1; i++)
+        for (int i = 0; i < TILE_COUNT_X; i++)
         {
             for (int j = 0; j < TILE_COUNT_Y; j++)
             {
@@ -219,21 +219,31 @@ public class GameManager : NetworkBehaviour
     [ObserversRpc]
     public void AssignChessArray(List<ChessPiece> chessPieces)
     {
-            if (chessPieces == null)
+        if (chessPieces == null)
+        {
+            Debug.Log("Chess pieces null!");
+            return; // Added return to prevent null reference exceptions
+        }
+
+        // Ensure the list has enough elements
+        if (chessPieces.Count != TILE_COUNT_X * TILE_COUNT_Y)
+        {
+            Debug.LogError("Chess pieces list size does not match the board dimensions.");
+            return;
+        }
+
+        ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+        for (int x = 0; x < TILE_COUNT_X; x++)
+        {
+            for (int y = 0; y < TILE_COUNT_Y; y++)
             {
-                Debug.Log("Chess pieces null!");
+                // Correct index calculation for row-major order: row * columns + column
+                // Here, y is the row, x is the column
+                int index = x * TILE_COUNT_X + y;
+                reconstructed[x, y] = chessPieces[index];
             }
-            // Reconstruct the 2D array.
-            ChessPiece[,] reconstructed = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
-            for (int x = 0; x < TILE_COUNT_X; x++)
-            {
-                for (int y = 0; y < TILE_COUNT_Y; y++)
-                {
-                    // Since the flattening was done in row-major order, we compute the index accordingly.
-                    reconstructed[x, y] = chessPieces[x * TILE_COUNT_Y + y];
-                }
-            }
-            _chessPieces = reconstructed;
+        }
+        _chessPieces = reconstructed;
     }
     public void SpawnAllPieces()
     {
@@ -280,7 +290,7 @@ public class GameManager : NetworkBehaviour
     public void CheckMoves(ChessPiece currentlyDragging)
     {
         _availableMoves = currentlyDragging.GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-        //_eSpecialMove = currentlyDragging.GetSpecialMoves(ref _chessPieces, ref _moveList, ref _availableMoves);
+        _eSpecialMove = currentlyDragging.GetSpecialMoves(ref _chessPieces, ref _moveList, ref _availableMoves);
     }
     public bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)
     {
@@ -332,15 +342,15 @@ public class GameManager : NetworkBehaviour
         _chessPieces[x, y] = cp;
         _chessPieces[previousPosition.x, previousPosition.y] = null;
         PositionSinglePiece(x, y);
+        Managers.Instance.TurnManager.CmdSwitchTurn();
+        Managers.Instance.TurnManager.ResetTimer();
         _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
+
         ProcessSpecialMove();
         if (CheckForCheckmate())
         {
             CheckMate(cp.team);
         }
-        Managers.Instance.TurnManager.CmdSwitchTurn();
-        Managers.Instance.TurnManager.ResetTimer();
-
     }
     [ServerRpc(RequireOwnership = false)]
     private void CmdUpdateChessPiecePosition(ChessPiece cp, int x, int y)
@@ -351,9 +361,7 @@ public class GameManager : NetworkBehaviour
 
         _chessPieces[x, y] = cp;
         _chessPieces[previousPosition.x, previousPosition.y] = null;
-
         PositionSinglePiece(x, y);
-
         Managers.Instance.TurnManager.CmdSwitchTurn();
         Managers.Instance.TurnManager.ResetTimer();
         _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
@@ -380,10 +388,10 @@ public class GameManager : NetworkBehaviour
         return -Vector2Int.one;
     }
     #endregion
-    #region SPECIAL MOVES 
+    #region SPECIAL MOVES
     private void ProcessSpecialMove() 
     {
-        if(_eSpecialMove == ESpecialMove.EnPassant)
+        if (_eSpecialMove == ESpecialMove.EnPassant)
         {
             var newMove = _moveList[^1];
             ChessPiece playerPawn = _chessPieces[newMove[1].x, newMove[1].y];
@@ -418,17 +426,21 @@ public class GameManager : NetworkBehaviour
             {
                 if (targetPawn.team == ETeam.White && lastMove[1].y == 7)
                 {
-                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.White,_skins.whitePlayerSkin);
-                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
+                    Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
                     Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.White,_skins.whitePlayerSkin);
+                    Spawn(nuQueen.gameObject);
+                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
                     _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
                     PositionSinglePiece(lastMove[1].x, lastMove[1].y,true);
                 }
                 if (targetPawn.team == ETeam.Black && lastMove[1].y == 0)
                 {
-                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.Black, _skins.blackPlayerSkin);
-                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
+                    Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
                     Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.Black, _skins.blackPlayerSkin);
+                    Spawn(nuQueen.gameObject);
+                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
                     _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
                     PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
                 }
@@ -479,7 +491,6 @@ public class GameManager : NetworkBehaviour
             }
         }
     }
-
     public void SimulateForSinglePiece(ChessPiece chessPiece,ref List<Vector2Int> moves, ChessPiece targetKing)
     {
         int actualX = chessPiece.currentX;
