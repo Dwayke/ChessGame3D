@@ -48,6 +48,7 @@ public class NetworkPlayerController : NetworkBehaviour
             if (_currentHover == -Vector2Int.one)
             {
                 _currentHover = hitPosition;
+                Debug.Log("Current Hover = " + Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y]);
                 Managers.Instance.GameManager.tiles[hitPosition.x, hitPosition.y].layer = LayerMask.NameToLayer("Hover");
             }
             if (_currentHover != hitPosition)
