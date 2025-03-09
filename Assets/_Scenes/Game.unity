@@ -1035,7 +1035,6 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   currentTurn: 2
   turnTime: 1
-  timeRemaining: 0
 --- !u!1 &373433752
 GameObject:
   m_ObjectHideFlags: 0
@@ -1526,21 +1525,22 @@ MonoBehaviour:
     blackTileMaterial: {fileID: 2100000, guid: d4f44b1fe8ee9654f8883801a9ed897e, type: 2}
     whiteTileMaterial: {fileID: 2100000, guid: 255ddda0f9e613b4a8a62adbee983548, type: 2}
     tileSize: 1
-    boardCenter: {x: 0, y: -0.6, z: 0}
+    boardCenter: {x: 0, y: -0.195, z: 0}
     yOffset: 0
   _deathParameters:
     deathStartOffsetModifier: 9
     deathYOffsetModifier: 1.25
     deathDistanceOffsetModifier: 3
-    deathSize: 0.3
+    deathSize: 0.6
     deathSpacing: 0.3
   dragYOffset: 1.5
   _victoryScreen: {fileID: 1352762143}
   _victoryText: {fileID: 72400707}
   _board: {fileID: 1816793660}
   _skins:
-    whitePlayerSkin: 2
-    blackPlayerSkin: 2
+    whitePlayerSkin: 1
+    blackPlayerSkin: 1
+    boardSkin: 0
   _availableMoves: []
   _eSpecialMove: 0
 --- !u!1 &747080940
@@ -3571,7 +3571,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 200671781574575516, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2945135481426523700, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
       propertyPath: m_LocalScale.x
@@ -3629,9 +3629,21 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3482741866746219767, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5748501013957282082, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
       propertyPath: m_Name
       value: highPolyWood
+      objectReference: {fileID: 0}
+    - target: {fileID: 5748501013957282082, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5801317658772673863, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

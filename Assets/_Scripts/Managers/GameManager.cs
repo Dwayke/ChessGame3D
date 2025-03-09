@@ -121,6 +121,41 @@ public class GameManager : NetworkBehaviour
     #endregion
     #region LOCAL METHODS
     #region GENERATE THE BOARD
+    [Server]
+    private void SpawnBoard(ESkin skin)
+    {
+        string path = $"ChessPieces3D/Boards/{skin}";
+        Debug.Log(path);
+        GameObject board = Resources.Load<GameObject>(path);
+        if (board != null)
+        {
+            board = Instantiate(board);
+            board.transform.SetParent(_board.transform);
+            Spawn(board);
+            RpcSpawnBoard(skin);
+        }
+        else
+        {
+            Debug.Log("board null");
+        }
+    }
+    [ObserversRpc]
+    private void RpcSpawnBoard(ESkin skin)
+    {
+        string path = $"ChessPieces3D/Boards/{skin}";
+        Debug.Log(path);
+        GameObject board = Resources.Load<GameObject>(path);
+        if (board != null)
+        {
+            board = Instantiate(board);
+            board.transform.SetParent(_board.transform);
+            Spawn(board);
+        }
+        else
+        {
+            Debug.Log("board null");
+        }
+    }
     private void GenerateAllTiles(float tileSize, int tileCountX, int tileCountY)
     {
         _bounds = new Vector3((tileCountX / 2) * tileSize, _spawnParameters.yOffset, (tileCountY / 2) * tileSize) + _spawnParameters.boardCenter;
@@ -215,6 +250,7 @@ public class GameManager : NetworkBehaviour
         }
         Debug.Log($"Assigning pieces, first piece: {_chessPieces[0, 0]}");
         AssignChessArray(flattenedChessPieces.ToList());
+        SpawnBoard(_skins.boardSkin);
     }
     [ObserversRpc]
     public void AssignChessArray(List<ChessPiece> chessPieces)
@@ -250,7 +286,7 @@ public class GameManager : NetworkBehaviour
         Debug.Log("initSpawn All Pieces");
         ServerSpawnAllPieces();
     }
-    private ChessPiece SpawnSinglePiece(EPiece pieceType, ETeam team, ESkin skin)
+    private ChessPiece SpawnSinglePiece(EPiece pieceType, ETeam team, EPieceSkin skin)
     {
         string path = $"ChessPieces3D/{team}/{skin}/{pieceType}";
         GameObject pieceObject = Resources.Load<GameObject>(path);
@@ -306,7 +342,6 @@ public class GameManager : NetworkBehaviour
     public bool MoveTo(ChessPiece cp, int x, int y)
     {
         if (!ContainsValidMove(ref _availableMoves, new Vector2Int(x, y))) return false;
-
         if (_chessPieces[x, y] != null)
         {
             ChessPiece ocp = _chessPieces[x, y];
@@ -330,6 +365,7 @@ public class GameManager : NetworkBehaviour
             }
         }
         CmdUpdateChessPiecePosition(cp, x, y);
+        RpcUpdateChessPiecePosition(cp, x, y);
 
 
         return true;
@@ -426,23 +462,13 @@ public class GameManager : NetworkBehaviour
             {
                 if (targetPawn.team == ETeam.White && lastMove[1].y == 7)
                 {
-                    Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-                    Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.White,_skins.whitePlayerSkin);
-                    Spawn(nuQueen.gameObject);
-                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
-                    _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
-                    PositionSinglePiece(lastMove[1].x, lastMove[1].y,true);
+                    PromotePawn(lastMove,ETeam.White);
+                    RpcPromotePawn(lastMove,ETeam.White);
                 }
                 if (targetPawn.team == ETeam.Black && lastMove[1].y == 0)
                 {
-                    Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-                    Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.Black, _skins.blackPlayerSkin);
-                    Spawn(nuQueen.gameObject);
-                    nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
-                    _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
-                    PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
+                    PromotePawn(lastMove, ETeam.Black);
+                    RpcPromotePawn(lastMove,ETeam.White);
                 }
             }
         }
@@ -490,6 +516,29 @@ public class GameManager : NetworkBehaviour
                 }
             }
         }
+    }
+    [ServerRpc]
+    private void PromotePawn(Vector2Int[] lastMove, ETeam team)
+    {
+        Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+        Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+        ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, team, _skins.whitePlayerSkin);
+        Spawn(nuQueen.gameObject);
+        nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
+        _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
+        PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
+        RpcPromotePawn(lastMove, team); 
+    }
+    [ObserversRpc]
+    private void RpcPromotePawn(Vector2Int[] lastMove, ETeam team)
+    {
+        Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+        //Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
+        //ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, team, _skins.whitePlayerSkin);
+        //Spawn(nuQueen.gameObject);
+        //nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
+        //_chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
+        PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
     }
     public void SimulateForSinglePiece(ChessPiece chessPiece,ref List<Vector2Int> moves, ChessPiece targetKing)
     {
@@ -640,8 +689,9 @@ public class DeathParameters
 [System.Serializable]
 public class Skins
 {
-    public ESkin whitePlayerSkin;
-    public ESkin blackPlayerSkin;
+    public EPieceSkin whitePlayerSkin;
+    public EPieceSkin blackPlayerSkin;
+    public ESkin boardSkin;
 }
 
 public enum ESpecialMove

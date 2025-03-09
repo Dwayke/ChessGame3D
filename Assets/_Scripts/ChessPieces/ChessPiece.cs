@@ -12,7 +12,7 @@ public class ChessPiece : NetworkBehaviour
     public int currentX;
     public int currentY;
     public ETeam team;
-    public ESkin skin;
+    public EPieceSkin skin;
     public EPiece piece;
 
     private Vector3 _desiredPosition;
@@ -135,7 +135,7 @@ public enum ETeam
     Black = 1,
     White = 2
 }
-public enum ESkin
+public enum EPieceSkin
 {
     None = 0,
     HighPoly = 1,
@@ -144,6 +144,14 @@ public enum ESkin
     LowerPolyWood = 4,
     LowPoly = 5,
     LowPolyWood = 6
+}
+public enum ESkin
+{
+    Classic = 0,
+    Glass = 1,
+    Silver = 2,
+    Gold = 3,
+    Crimson = 4
 }
 public enum EPiece
 {
