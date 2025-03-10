@@ -113,6 +113,12 @@ public class ChessPiece : NetworkBehaviour
             transform.localScale = _desiredScale;
         }
     }
+    [ServerRpc(RequireOwnership =false)]
+    public void DespawnChessPiece()
+    {
+        Debug.Log("Despawing: "+this.gameObject);
+        base.Despawn();
+    }
     public virtual ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {
         ESpecialMove specialMove = ESpecialMove.None;

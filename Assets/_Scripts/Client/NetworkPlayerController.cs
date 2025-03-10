@@ -16,10 +16,16 @@ public class NetworkPlayerController : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
+        if (!_currentCamera)
+        {
+            _currentCamera = Camera.main;
+            //_currentCamera = _player.GetComponent<Camera>();
+        }
         _chessControls = new ChessControls();
         _player = GetComponent<MatchPlayer>();
         _chessControls.Gameplay.Click.performed += OnClick;
         _chessControls.Gameplay.Enable();
+        _currentCamera.transform.SetParent(transform, false);
     }
     public override void OnStopClient()
     {
@@ -31,11 +37,7 @@ public class NetworkPlayerController : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
-        if (!_currentCamera)
-        {
-            _currentCamera = GetComponent<Camera>();
-            return;
-        }
+
         CheckHoverStatus();
     }
     private void CheckHoverStatus()

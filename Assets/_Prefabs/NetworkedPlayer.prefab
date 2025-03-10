@@ -82,12 +82,12 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 44
+  <PrefabId>k__BackingField: 46
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 10355022255572370508
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
-    Position: {x: 0, y: 24, z: -12}
+    Position: {x: 0, y: 15, z: -7.5}
     Rotation: {x: 0.53729963, y: 0, z: 0, w: 0.8433915}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1
@@ -144,7 +144,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7306496666975517281}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}

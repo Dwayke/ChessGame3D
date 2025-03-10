@@ -17,10 +17,10 @@ public class ClientManager : NetworkBehaviour
     {
         if (players.Count % 2 == 0)
         {
-            player.team = ETeam.Black;
-            RpcAssignTeam(player, ETeam.Black);
+            player.team = ETeam.White;
+            RpcAssignTeam(player, ETeam.White);
         }
-        else { player.team = ETeam.White; RpcAssignTeam(player,ETeam.White); }
+        else { player.team = ETeam.Black; RpcAssignTeam(player,ETeam.Black); }
     }
     [ObserversRpc(ExcludeOwner = true)]
     private void RpcAssignTeam(MatchPlayer player,ETeam team)
