@@ -9,10 +9,14 @@ public class Pawn : ChessPiece
         List<Vector2Int> availableMoves = new();
         int direction = (team == ETeam.White) ? 1 : -1;
         //One in front
-        if (board[currentX,currentY+direction] == null) 
+        if((currentY + direction)<= tileCountX || (currentY + direction) >= tileCountY)
         {
-            availableMoves.Add(new Vector2Int(currentX,currentY+direction));
+            if (board[currentX, currentY + direction] == null)
+            {
+                availableMoves.Add(new Vector2Int(currentX, currentY + direction));
+            }
         }
+
         //Two int front
         if (board[currentX, currentY + direction] == null)
         {
@@ -47,7 +51,7 @@ public class Pawn : ChessPiece
     public override ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref  List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {
         int direction = (team == ETeam.White) ? 1 : -1;
-        if ((team == ETeam.White && currentY == 6)||(team == ETeam.Black&&currentY ==1))
+        if ((team == ETeam.White && currentY >= 6)||(team == ETeam.Black&&currentY <=1))
         {
             return ESpecialMove.Promotion;
         }

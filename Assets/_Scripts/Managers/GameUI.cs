@@ -2,16 +2,14 @@ using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Client;
 using FishNet.Managing.Server;
+using FishNet.Object;
 using TMPro;
 using UnityEngine;
 
-public class GameUI : MonoBehaviour
+public class GameUI : NetworkBehaviour
 {
     #region VARS
-    //public ServerManager server;
-    //public ClientManager client;
-
-    [SerializeField] private Animator _menuAnimator;
+    public Animator menuAnimator;
     [SerializeField] TMP_InputField _addressInput;
     #endregion
     #region ENGINE
@@ -20,38 +18,36 @@ public class GameUI : MonoBehaviour
     #region MEMBER
     public void OnLocalGameButton()
     {
-        //server.StartConnection();
-        //client.StartConnection(_addressInput.text, 7777);
-        _menuAnimator.SetTrigger("InGameMenu");
+        Managers.Instance.GameManager.isLocalGame = true;
+        menuAnimator.SetTrigger("InGameMenu");
+        Managers.Instance.GameManager.CmdStartGame();
         Debug.Log("Start Local Game");
     }
     public void OnOnlineGameButton()
     {
-        _menuAnimator.SetTrigger("OnlineMenu");
+        Managers.Instance.ClientManager.ReadyPlayersCounter(true);
+        Managers.Instance.GameManager.isLocalGame = false;
+        menuAnimator.SetTrigger("HostMenu");
         Debug.Log("Go to Online Menu");
     }
     public void OnOnlineHostButton()
     {
-        //server.StartConnection(7777);
-        //client.StartConnection("127.0.0.1", 7777);
-        _menuAnimator.SetTrigger("HostMenu");
+        menuAnimator.SetTrigger("HostMenu");
         Debug.Log("Host Online Game");
     }
     public void OnOnlineConnectButton()
     {
-        //client.StartConnection(_addressInput.text, 7777);
         Debug.Log("Connect To an Online Game");
     }
     public void OnOnlineBackButton()
     {
-        _menuAnimator.SetTrigger("StartMenu");
+        menuAnimator.SetTrigger("StartMenu");
         Debug.Log("Back to Main Menu");
     }    
     public void OnHostBackButton()
     {
-        //server.StopConnection(true);
-        //client.StopConnection();
-        _menuAnimator.SetTrigger("OnlineMenu"); 
+        Managers.Instance.ClientManager.ReadyPlayersCounter(false);
+        menuAnimator.SetTrigger("StartMenu"); 
         Debug.Log("Back to Online Menu");
     }
     #endregion

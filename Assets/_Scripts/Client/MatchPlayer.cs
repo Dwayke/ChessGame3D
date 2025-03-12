@@ -18,4 +18,8 @@ public class MatchPlayer : NetworkBehaviour
     {
         Managers.Instance.ClientManager.AssignTeam(this);
     }
+    private void RpcAssignTeam()
+    {
+        Managers.Instance.ClientManager.AssignTeam(this);
+    }
 }

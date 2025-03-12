@@ -24,8 +24,11 @@ public class GameManager : NetworkBehaviour
     [Header("Prefabs & Materials")]
     [SerializeField] GameObject _board;
     [SerializeField] Skins _skins;
+    [SerializeField] AudioSource _pieceSFX;
     #endregion
     #region LOGIC
+    public bool isGameStarted = false;
+    public bool isLocalGame = true;
     [HideInInspector] public ChessPiece[,] _chessPieces;
     [HideInInspector] public ChessPiece[,] _deserializedChessPieces;
     [HideInInspector] public List<Vector2Int> _availableMoves = new();
@@ -50,29 +53,40 @@ public class GameManager : NetworkBehaviour
     #region MEMBER METHODS
     public void StartGame()
     {
-        if (Managers.Instance.ClientManager.players.Count == 2)
-        {
-            SpawnAllPieces();
-            PositionAllPieces();
-            RpcStartGame();
-        }
+        isGameStarted = true;
+        SpawnAllPieces();
+        PositionAllPieces();
+        RpcStartGame();
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void CmdStartGame()
+    {
+        isGameStarted = true;
+        SpawnAllPieces();
+        PositionAllPieces();
+        RpcStartGame();
     }
     [ObserversRpc]
     private void RpcStartGame()
     {
-
+        isGameStarted = true;
+        Managers.Instance.GameUI.menuAnimator.SetTrigger("InGameMenu");
         SpawnAllPieces();
         PositionAllPieces();
     }
     [ServerRpc(RequireOwnership = false)]
     public void CheckMate(ETeam winner)
     {
+        Debug.Log("checkmate");
+        isGameStarted = false;
         RpcCheckMate(winner);
         DisplayVictory(winner);
     }
     [ObserversRpc]
     public void RpcCheckMate(ETeam winner)
     {
+        isGameStarted = false;
+        Debug.Log("checkmate");
         DisplayVictory(winner);
     }
     public void DisplayVictory(ETeam winner)
@@ -313,6 +327,7 @@ public class GameManager : NetworkBehaviour
     }
     private void PositionSinglePiece(int x, int y, bool force = false)
     {
+        _pieceSFX.Play();
         _chessPieces[x, y].currentX = x;
         _chessPieces[x, y].currentY = y;
         _chessPieces[x, y].SetPosition(GetTileCenter(x, y), force);
@@ -341,7 +356,7 @@ public class GameManager : NetworkBehaviour
     }
     public bool MoveTo(ChessPiece cp, int x, int y)
     {
-        if (!ContainsValidMove(ref _availableMoves, new Vector2Int(x, y))) return false;
+        if (!ContainsValidMove(ref _availableMoves, new Vector2Int(x, y))) { Debug.Log("No available moves"); return false; }
         if (_chessPieces[x, y] != null)
         {
             ChessPiece ocp = _chessPieces[x, y];
@@ -354,18 +369,26 @@ public class GameManager : NetworkBehaviour
                 if (ocp.piece == EPiece.King) { CheckMate(ETeam.Black); }
                 _deathParameters.deadWhites.Add(ocp);
                 ocp.SetScale(Vector3.one * _deathParameters.deathSize);
-                ocp.SetPosition(new Vector3(_deathParameters.deathStartOffsetModifier * _spawnParameters.tileSize, _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, -_deathParameters.deathDistanceOffsetModifier * _spawnParameters.tileSize) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.left * _deathParameters.deathSpacing) * _deathParameters.deadWhites.Count);
+                ocp.SetPosition(new Vector3(8 * _spawnParameters.tileSize, _spawnParameters.yOffset, -1 * _spawnParameters.tileSize) - _bounds
+                    + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2)
+                    + (Vector3.forward * _deathParameters.deathSpacing) * _deathParameters.deadWhites.Count);
             }
             else if (ocp.team == ETeam.Black)
             {
                 if (ocp.piece == EPiece.King) { CheckMate(ETeam.White); }
                 _deathParameters.deadBlacks.Add(ocp);
                 ocp.SetScale(Vector3.one * _deathParameters.deathSize);
-                ocp.SetPosition(new Vector3(-(_spawnParameters.tileSize + 1f), _spawnParameters.yOffset * _deathParameters.deathYOffsetModifier, _spawnParameters.tileSize * (_deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) + (Vector3.right * _deathParameters.deathSpacing) * _deathParameters.deadBlacks.Count);
+                ocp.SetPosition(new Vector3(-1* _spawnParameters.tileSize, _spawnParameters.yOffset, _spawnParameters.tileSize *8) - _bounds 
+                    + new Vector3(_spawnParameters.tileSize / 2, 0, _spawnParameters.tileSize / 2) 
+                    + (Vector3.back * _deathParameters.deathSpacing) * _deathParameters.deadBlacks.Count);
             }
         }
-        CmdUpdateChessPiecePosition(cp, x, y);
 
+        CmdUpdateChessPiecePosition(cp, x, y);
+        if (CheckForCheckmate())
+        {
+            CheckMate(cp.team);
+        }
         return true;
     }
     [ObserversRpc]
@@ -399,10 +422,7 @@ public class GameManager : NetworkBehaviour
         _moveList.Add(new Vector2Int[] { previousPosition, new(x, y) });
 
         ProcessSpecialMove();
-        if (CheckForCheckmate())
-        {
-            CheckMate(cp.team);
-        }
+
         RpcUpdateChessPiecePosition(cp, x, y);
     }
 
@@ -454,39 +474,21 @@ public class GameManager : NetworkBehaviour
         }
         if (_eSpecialMove == ESpecialMove.Promotion)
         {
-            Debug.Log("Promote Pawn");
             Vector2Int[] lastMove = _moveList[^1];
             ChessPiece targetPawn = _chessPieces[lastMove[1].x, lastMove[1].y];
 
             if (targetPawn.piece == EPiece.Pawn)
             {
-                Debug.Log("Pawn check");
                 if (targetPawn.team == ETeam.White && lastMove[1].y == 7)
                 {
-                    Debug.Log("team check");
-                    targetPawn.DespawnChessPiece();
-                    targetPawn.Despawn();
-                    Despawn(targetPawn.gameObject);
-                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.White, _skins.whitePlayerSkin);
-                    nuQueen.transform.position = targetPawn.transform.position;
-                    Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-                    _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
-                    PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
-                    //PromotePawn(lastMove, ETeam.White);
+                    PromotePawn(lastMove, ETeam.White);
                 }
                 if (targetPawn.team == ETeam.Black && lastMove[1].y == 0)
                 {
-                    targetPawn.DespawnChessPiece();
-                    ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, ETeam.White, _skins.whitePlayerSkin);
-                    nuQueen.transform.position = targetPawn.transform.position;
-                    Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-                    _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
-                    PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
-                    //PromotePawn(lastMove, ETeam.White);
+                    PromotePawn(lastMove, ETeam.Black);
                 }
             }
         }
-        else {Debug.Log("No Promotion"); }
         if(_eSpecialMove == ESpecialMove.Castling)
         {
             Debug.Log("Castling");
@@ -537,24 +539,16 @@ public class GameManager : NetworkBehaviour
     [ServerRpc(RequireOwnership =false)]
     private void PromotePawn(Vector2Int[] lastMove, ETeam team)
     {
-
-        //Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
         InstanceFinder.ServerManager.Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-        //Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
         ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, team, _skins.whitePlayerSkin);
-        //Spawn(nuQueen.gameObject);
         nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
         _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
         PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
-        //RpcPromotePawn(lastMove, team); 
+        RpcPromotePawn(lastMove,nuQueen); 
     }
     [ObserversRpc]
-    private void RpcPromotePawn(Vector2Int[] lastMove, ETeam team)
+    private void RpcPromotePawn(Vector2Int[] lastMove, ChessPiece nuQueen)
     {
-        //Destroy(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-        Despawn(_chessPieces[lastMove[1].x, lastMove[1].y].gameObject);
-        ChessPiece nuQueen = SpawnSinglePiece(EPiece.Queen, team, _skins.whitePlayerSkin);
-        //Spawn(nuQueen.gameObject);
         nuQueen.transform.position = _chessPieces[lastMove[1].x, lastMove[1].y].transform.position;
         _chessPieces[lastMove[1].x, lastMove[1].y] = nuQueen;
         PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
@@ -660,10 +654,13 @@ public class GameManager : NetworkBehaviour
         List<Vector2Int> currentAvailableMoves = new();
         for (int i = 0; i < attackingPieces.Count; i++)
         {
-            var pieceMoves = attackingPieces[i].GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
-            for (int b = 0; b < pieceMoves.Count; b++)
+            if (attackingPieces[i])
             {
-                currentAvailableMoves.Add(pieceMoves[b]);
+                var pieceMoves = attackingPieces[i].GetAvailableMoves(ref _chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
+                for (int b = 0; b < pieceMoves.Count; b++)
+                {
+                    currentAvailableMoves.Add(pieceMoves[b]);
+                }
             }
         }
         if (currentAvailableMoves == null) Debug.Log("Current Available Moves is null in check for checkmate");

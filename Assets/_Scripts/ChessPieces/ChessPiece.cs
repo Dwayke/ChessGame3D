@@ -117,7 +117,7 @@ public class ChessPiece : NetworkBehaviour
     public void DespawnChessPiece()
     {
         Debug.Log("Despawing: "+this.gameObject);
-        base.Despawn();
+        Despawn(gameObject);
     }
     public virtual ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {

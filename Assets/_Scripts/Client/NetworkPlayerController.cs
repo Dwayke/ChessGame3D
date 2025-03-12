@@ -42,7 +42,7 @@ public class NetworkPlayerController : NetworkBehaviour
     }
     private void CheckHoverStatus()
     {
-        if (Managers.Instance.TurnManager.currentTurn != _player.team) return;
+        if ((Managers.Instance.TurnManager.currentTurn != _player.team && !Managers.Instance.GameManager.isLocalGame) || !Managers.Instance.GameManager.isGameStarted) return;
         Ray ray = _currentCamera.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit info, 100, LayerMask.GetMask("Tile", "Hover", "Highlight")))
         {
@@ -50,7 +50,6 @@ public class NetworkPlayerController : NetworkBehaviour
             if (_currentHover == -Vector2Int.one)
             {
                 _currentHover = hitPosition;
-                Debug.Log("Current Hover = " + Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y]);
                 Managers.Instance.GameManager.tiles[hitPosition.x, hitPosition.y].layer = LayerMask.NameToLayer("Hover");
             }
             if (_currentHover != hitPosition)
@@ -74,18 +73,14 @@ public class NetworkPlayerController : NetworkBehaviour
     }
     private void OnClick(InputAction.CallbackContext obj)
     {
-        Debug.Log("Click");
-        if (Managers.Instance.TurnManager.currentTurn != _player.team) return;
+        if ((Managers.Instance.TurnManager.currentTurn != _player.team&&!Managers.Instance.GameManager.isLocalGame) || !Managers.Instance.GameManager.isGameStarted) return;
         if (!_currentCamera) return;
         if (_currentHover != -Vector2Int.one)
         {
             if (_currentlyDragging == null)
             {
-                Debug.Log("New Currently Dragging");
-
                 if (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y] != null && (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && Managers.Instance.TurnManager.currentTurn == ETeam.White) || (Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && Managers.Instance.TurnManager.currentTurn == ETeam.Black))
                 {
-                    Debug.Log("Found the piece");
                     _currentlyDragging = Managers.Instance.GameManager._chessPieces[_currentHover.x, _currentHover.y];
                     Managers.Instance.GameManager.CheckMoves(_currentlyDragging);
                     PreventCheck();
@@ -94,8 +89,6 @@ public class NetworkPlayerController : NetworkBehaviour
             }
             else
             {
-                Debug.Log("Existing Currently Dragging");
-
                 Vector2Int previousPosition = new(_currentlyDragging.currentX, _currentlyDragging.currentY);
                 bool validMove = Managers.Instance.GameManager.MoveTo(_currentlyDragging, _currentHover.x, _currentHover.y);
                 if (!validMove)
