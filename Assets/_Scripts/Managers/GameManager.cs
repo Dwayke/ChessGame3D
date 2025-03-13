@@ -3,11 +3,11 @@ using FishNet;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using JetBrains.Annotations;
-using System;
-using FishNet.Object.Synchronizing;
+using UnityEngine.SceneManagement;
 using System.Linq;
+using Cysharp.Threading.Tasks;
+using System;
+using FishNet.Managing.Scened;
 
 public class GameManager : NetworkBehaviour
 {
@@ -18,10 +18,13 @@ public class GameManager : NetworkBehaviour
     [SerializeField] DeathParameters _deathParameters;
     public float dragYOffset = 1.5f;
     [SerializeField] GameObject _victoryScreen;
-    [SerializeField] TMP_Text _victoryText;
+    [SerializeField] TMP_Text _victoryText;    
+    [SerializeField] GameObject _clientDisconnectScreen;
+    [SerializeField] TMP_Text _clientDisconnectText;
     #endregion
     #region PREFABS
     [Header("Prefabs & Materials")]
+    [SerializeField] GameObject _environment;
     [SerializeField] GameObject _board;
     [SerializeField] Skins _skins;
     [SerializeField] AudioSource _pieceSFX;
@@ -53,6 +56,7 @@ public class GameManager : NetworkBehaviour
     #region MEMBER METHODS
     public void StartGame()
     {
+        _environment.SetActive(true);
         isGameStarted = true;
         SpawnAllPieces();
         PositionAllPieces();
@@ -61,6 +65,7 @@ public class GameManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void CmdStartGame()
     {
+        _environment.SetActive(true);
         isGameStarted = true;
         SpawnAllPieces();
         PositionAllPieces();
@@ -94,7 +99,50 @@ public class GameManager : NetworkBehaviour
         _victoryScreen.SetActive(true);
         _victoryText.text = winner.ToString() + " Team Won!";
     }
+    [ServerRpc(RequireOwnership =false)]
+    public void OnClientDisconnect(ETeam winner)
+    {
+        isGameStarted = false;
+        DisplayOpponentDisconnect(winner, true);
+        RpcOnClientDisconnect(winner);
+        _environment.SetActive(false);
+        DisconnectServerAfterDelay(5);
+        ReloadScene();
+    }
+    [ObserversRpc]
+    private void RpcOnClientDisconnect(ETeam winner)
+    {
+        isGameStarted = false;
+        DisplayOpponentDisconnect(winner,true);
+        _environment.SetActive(false);
+        DisconnectServerAfterDelay(5);
+    }
+    private async void DisconnectServerAfterDelay(int seconds)
+    {
+        await UniTask.Delay(seconds*1000);
+        Managers.Instance.ClientManager.RemoveAllPlayers();
+        ServerManager.StopConnection(false);
+        DisplayOpponentDisconnect(ETeam.None, false);
+    }
+    private void DisplayOpponentDisconnect(ETeam winner,bool shouldDisplay)
+    {
+        _clientDisconnectScreen.SetActive(shouldDisplay);
+        _clientDisconnectText.text = winner.ToString() + " Team Won!";
+    }
+    public void ReloadScene()
+    {
+        //SceneLoadData sld = new("EmptyScene")
+        //{
+        //    ReplaceScenes = ReplaceOption.All
+        //};
+        //NetworkManager.SceneManager.LoadGlobalScenes(sld);
 
+        SceneLoadData sld = new("MainMenu")
+        {
+            ReplaceScenes = ReplaceOption.All
+        };
+        NetworkManager.SceneManager.LoadGlobalScenes(sld);
+    }
     public void OnResetButton()
     {
         //UI

@@ -10,7 +10,22 @@ public class ClientManager : NetworkBehaviour
     public void AddPlayer(MatchPlayer player)
     {
         players.Add(player);
-        //CheckPlayerCount();
+    }   
+    [ServerRpc(RequireOwnership =false)]
+    public void RemovePlayer(MatchPlayer player)
+    {
+        readyPlayersCount -= 1;
+        players.Remove(player);
+    }    
+    [ServerRpc(RequireOwnership =false)]
+    public void RemoveAllPlayers()
+    {
+        foreach (MatchPlayer player in players) 
+        {
+            readyPlayersCount -= 1;
+            player.ClientManager.StopConnection();
+            players.Remove(player);
+        }
     }
     [ServerRpc(RequireOwnership = false)]
     public void AssignTeam(MatchPlayer player)

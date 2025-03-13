@@ -25,7 +25,8 @@ public class NetworkPlayerController : NetworkBehaviour
         _player = GetComponent<MatchPlayer>();
         _chessControls.Gameplay.Click.performed += OnClick;
         _chessControls.Gameplay.Enable();
-        _currentCamera.transform.SetParent(transform, false);
+        _currentCamera.transform.position = transform.position;
+        _currentCamera.transform.rotation = transform.rotation;
     }
     public override void OnStopClient()
     {
