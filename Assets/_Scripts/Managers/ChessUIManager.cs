@@ -6,7 +6,7 @@ using FishNet.Object;
 using TMPro;
 using UnityEngine;
 
-public class GameUI : NetworkBehaviour
+public class ChessUIManager : NetworkBehaviour
 {
     #region VARS
     public Animator menuAnimator;
@@ -18,15 +18,15 @@ public class GameUI : NetworkBehaviour
     #region MEMBER
     public void OnLocalGameButton()
     {
-        Managers.Instance.GameManager.isLocalGame = true;
+        ChessManagers.Instance.GameManager.isLocalGame = true;
         menuAnimator.SetTrigger("InGameMenu");
-        Managers.Instance.GameManager.CmdStartGame();
+        ChessManagers.Instance.GameManager.CmdStartGame();
         Debug.Log("Start Local Game");
     }
     public void OnOnlineGameButton()
     {
-        Managers.Instance.ClientManager.ReadyPlayersCounter(true);
-        Managers.Instance.GameManager.isLocalGame = false;
+        ChessManagers.Instance.ClientManager.CmdReadyPlayersCounter(true);
+        ChessManagers.Instance.GameManager.isLocalGame = false;
         menuAnimator.SetTrigger("HostMenu");
         Debug.Log("Go to Online Menu");
     }
@@ -46,7 +46,7 @@ public class GameUI : NetworkBehaviour
     }    
     public void OnHostBackButton()
     {
-        Managers.Instance.ClientManager.ReadyPlayersCounter(false);
+        ChessManagers.Instance.ClientManager.CmdReadyPlayersCounter(false);
         menuAnimator.SetTrigger("StartMenu"); 
         Debug.Log("Back to Online Menu");
     }

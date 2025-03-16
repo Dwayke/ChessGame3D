@@ -5,13 +5,16 @@ using FishNet.Object.Synchronizing;
 using System;
 using UnityEngine;
 
-public class TurnManager : NetworkBehaviour
+public class ChessTurnManager : NetworkBehaviour
 {
+    #region VARS
     public ETeam currentTurn = ETeam.White;
     public ETurnTime turnTime = ETurnTime.ThirtySec;
     private readonly SyncTimer _timeRemaining = new();
     bool _isWhiteTurn = true;
     float timer;
+    #endregion
+    #region ENGINE
     private void OnEnable()
     {
         _isWhiteTurn = true;
@@ -22,33 +25,47 @@ public class TurnManager : NetworkBehaviour
     {
         _timeRemaining.OnChange -= TimeRemaining_OnChange;
     }
-    private void TimeRemaining_OnChange(SyncTimerOperation op, float prev, float next, bool asServer)
-    {
-        if (op == SyncTimerOperation.Finished) { CmdSwitchTurn(); }
-    }
     private void FixedUpdate()
     {
         _timeRemaining.Update();
-        if (_timeRemaining.Remaining <= 0&& Managers.Instance.ClientManager.players.Count == 2)
+        if (_timeRemaining.Remaining <= 0&& ChessManagers.Instance.ClientManager.players.Count == 2)
         {
             StartTimer();
         }
     }
-    public void CmdSwitchTurn()
+    #endregion
+    #region MEMBER METHODS
+    public void SwitchTurn()
     {
         Debug.Log("switch turn");
         _isWhiteTurn = !_isWhiteTurn;
         if (_isWhiteTurn)
         {
             currentTurn = ETeam.White;
-            RpcSwitchTurn(ETeam.White); 
+            RpcSwitchTurn(ETeam.White);
         }
         else
         {
-            currentTurn = ETeam.Black; 
-            RpcSwitchTurn(ETeam.Black); 
+            currentTurn = ETeam.Black;
+            RpcSwitchTurn(ETeam.Black);
         }
     }
+    public void StartTimer()
+    {
+        _timeRemaining.StartTimer(timer);
+    }
+    public void ResetTimer()
+    {
+        _timeRemaining.StopTimer();
+        _timeRemaining.StartTimer(timer);
+    }
+    #endregion
+    #region LOCAL METHODS
+    private void TimeRemaining_OnChange(SyncTimerOperation op, float prev, float next, bool asServer)
+    {
+        if (op == SyncTimerOperation.Finished) { SwitchTurn(); }
+    }
+
     [ObserversRpc]
     private void RpcSwitchTurn(ETeam team)
     {
@@ -66,21 +83,6 @@ public class TurnManager : NetworkBehaviour
             _ => 0f
         };
     }
-    public void StartTimer()
-    {
-        _timeRemaining.StartTimer(timer);
-    }
-    public void ResetTimer()
-    {
-        _timeRemaining.StopTimer();
-        _timeRemaining.StartTimer(timer);
-    }
+    #endregion
 }
-public enum ETurnTime
-{
-    None = 0,
-    ThirtySec = 1,
-    SixtySec=2,
-    NinetySec=3,
-    FiveMinutes = 4
-}
+

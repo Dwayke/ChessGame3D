@@ -2,6 +2,7 @@ using DG.Tweening;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -24,47 +25,13 @@ public class ChessPiece : NetworkBehaviour
         transform.rotation = Quaternion.Euler((team == ETeam.White)? Vector3.zero: new Vector3(0,180,0));
         CmdApplyTransform();
     }
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdApplyTransform()
-    {
-        if (piece == EPiece.Knight)
-        {
-            transform.DOJump(_desiredPosition, 3, 1, 1);
-        }
-        else
-        {
-            transform.DOMove(_desiredPosition, 1);
-        }
-        transform.DOScale(_desiredScale, 1);
-        RpcApplyTransform();
-    }
-    [ObserversRpc]
-    private void RpcApplyTransform()
-    {
-        if (piece == EPiece.Knight)
-        {
-            transform.DOJump(_desiredPosition, 3, 1, 1);
-        }
-        else
-        {
-            transform.DOMove(_desiredPosition, 1);
-        }
-        transform.DOScale(_desiredScale, 1);
-    }
     #endregion
     #region MEMBER
-    [ObserversRpc]
-    private void RpcSetPosition(Vector3 position, bool force = false)
-    {
-        _desiredPosition = position;
-        if (force)
-        {
-            transform.position = _desiredPosition;
-        }
-    }
+
     [ServerRpc(RequireOwnership =false)]
-    private void CmdSetPosition(Vector3 position, bool force = false)
+    public void CmdSetPosition(Vector3 position, bool force = false)
     {
+        CmdApplyTransform();
         RpcSetPosition(position, force);
         _desiredPosition = position;
         if (force)
@@ -83,18 +50,11 @@ public class ChessPiece : NetworkBehaviour
             transform.position = _desiredPosition;
         }
     }
-    [ObserversRpc]
-    private void RpcSetScale(Vector3 scale, bool force = false)
-    {
-        _desiredScale = scale;
-        if (force)
-        {
-            transform.localScale = _desiredScale;
-        }
-    }
+
     [ServerRpc(RequireOwnership = false)]
-    private void CmdSetScale(Vector3 scale, bool force = false)
+    public void CmdSetScale(Vector3 scale, bool force = false)
     {
+        CmdApplyTransform();
         RpcSetScale(scale, force);
         _desiredScale = scale;
         if (force)
@@ -113,12 +73,6 @@ public class ChessPiece : NetworkBehaviour
             transform.localScale = _desiredScale;
         }
     }
-    [ServerRpc(RequireOwnership =false)]
-    public void DespawnChessPiece()
-    {
-        Debug.Log("Despawing: "+this.gameObject);
-        Despawn(gameObject);
-    }
     public virtual ESpecialMove GetSpecialMoves(ref ChessPiece[,] chesspiece, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves)
     {
         ESpecialMove specialMove = ESpecialMove.None;
@@ -129,10 +83,65 @@ public class ChessPiece : NetworkBehaviour
         List<Vector2Int> availableMoves = new();
         return availableMoves;
     }
-  
     #endregion
     #region LOCAL
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdApplyTransform()
+    {
+        if (piece == EPiece.Knight)
+        {
+            transform.DOJump(_desiredPosition, 3, 1, 1);
+        }
+        else
+        {
+            transform.DOMove(_desiredPosition, 1);
+        }
+        transform.DOScale(_desiredScale, 1);
 
+        RpcApplyTransform();
+    }
+    [ObserversRpc]
+    private void RpcApplyTransform()
+    {
+        if (IsClientInitialized)
+        {
+            if (piece == EPiece.Knight)
+            {
+                transform.DOJump(_desiredPosition, 3, 1, 1);
+            }
+            else
+            {
+                transform.DOMove(_desiredPosition, 1);
+            }
+            transform.DOScale(_desiredScale, 1);
+        }
+    }
+    [ObserversRpc]
+    private void RpcSetPosition(Vector3 position, bool force = false)
+    {
+        if (IsClientInitialized)
+        {
+            _desiredPosition = position;
+            if (force)
+            {
+                transform.position = _desiredPosition;
+            }
+        }
+
+    }
+    [ObserversRpc]
+    private void RpcSetScale(Vector3 scale, bool force = false)
+    {
+        if (IsClientInitialized)
+        {
+            _desiredScale = scale;
+            if (force)
+            {
+                transform.localScale = _desiredScale;
+            }
+        }
+
+    }
     #endregion
 }
 public enum ETeam
