@@ -17,7 +17,7 @@ public class ChessMatchPlayer : NetworkBehaviour
     {
         base.OnStopClient();
         CmdRemovePlayer();
-        ChessManagers.Instance.GameUI.menuAnimator.SetTrigger("StartMenu");
+        //ChessManagers.Instance.GameUI.menuAnimator.SetTrigger("StartMenu");
         if (!ChessManagers.Instance.GameManager.isLocalGame&&ChessManagers.Instance.GameManager.isGameStarted)
         {
             AnnounceGameExit();
@@ -40,7 +40,7 @@ public class ChessMatchPlayer : NetworkBehaviour
     {
         ChessManagers.Instance.ClientManager.AddPlayer(this);
     }
-    [ServerRpc(RequireOwnership = false)]
+    [ServerRpc(RequireOwnership = true)]
     private void CmdRemovePlayer()
     {
         ChessManagers.Instance.ClientManager.RemovePlayer(this);
@@ -56,10 +56,11 @@ public class ChessMatchPlayer : NetworkBehaviour
         {
             ChessManagers.Instance.GameManager.CmdOnClientDisconnect(ETeam.Black);
         }
-        else 
+        else if(team == ETeam.Black)
         {
             ChessManagers.Instance.GameManager.CmdOnClientDisconnect(ETeam.White);
         }
+        else { Debug.Log("nullTeam"); }
     }
     #endregion
 }

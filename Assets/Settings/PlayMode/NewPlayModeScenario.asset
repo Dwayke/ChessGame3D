@@ -31,7 +31,7 @@ MonoBehaviour:
     - Player1 - Run
     m_BuildProfile: {fileID: 11400000, guid: d68bdc1e20c9c414eaa7773605d76e75, type: 2}
     advancedConfiguration:
-      m_StreamLogsToMainEditor: 0
+      m_StreamLogsToMainEditor: 1
       m_LogsColor: {r: 0.36470592, g: 0.8666667, b: 0.8666667, a: 1}
       m_Arguments: -screen-fullscreen 0 -screen-width 1024 -screen-height 720
   - Name: Instance
@@ -41,7 +41,7 @@ MonoBehaviour:
     - Instance - Run
     m_BuildProfile: {fileID: 11400000, guid: d68bdc1e20c9c414eaa7773605d76e75, type: 2}
     advancedConfiguration:
-      m_StreamLogsToMainEditor: 0
+      m_StreamLogsToMainEditor: 1
       m_LogsColor: {r: 0.8666667, g: 0.36470592, b: 0.8634189, a: 1}
       m_Arguments: -screen-fullscreen 0 -screen-width 1024 -screen-height 720
   m_RemoteInstances: []

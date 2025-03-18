@@ -50,7 +50,7 @@ public class ChessboardManager : NetworkBehaviour
             for (int y = 0; y < tileCountY; y++)
             {
                 tiles[x, y] = GenerateSingleTile(tileSize, x, y);
-                Spawn(tiles[x, y]);
+                //Spawn(tiles[x, y]);
             }
         }
     }
@@ -130,8 +130,8 @@ public class ChessboardManager : NetworkBehaviour
             {
                 if (ocp.piece == EPiece.King) { ChessManagers.Instance.GameManager.CmdCheckMate(ETeam.Black); }
                 deathParameters.deadWhites.Add(ocp);
-                ocp.CmdSetScale(Vector3.one * deathParameters.deathSize);
-                ocp.CmdSetPosition(new Vector3(8 * spawnParameters.tileSize, spawnParameters.yOffset, -1 * spawnParameters.tileSize) - _bounds
+                ocp.SetScale(Vector3.one * deathParameters.deathSize);
+                ocp.SetPosition(new Vector3(8 * spawnParameters.tileSize, spawnParameters.yOffset, -1 * spawnParameters.tileSize) - _bounds
                     + new Vector3(spawnParameters.tileSize / 2, 0, spawnParameters.tileSize / 2)
                     + (Vector3.forward * deathParameters.deathSpacing) * deathParameters.deadWhites.Count);
             }
@@ -139,8 +139,8 @@ public class ChessboardManager : NetworkBehaviour
             {
                 if (ocp.piece == EPiece.King) { ChessManagers.Instance.GameManager.CmdCheckMate(ETeam.White); }
                 deathParameters.deadBlacks.Add(ocp);
-                ocp.CmdSetScale(Vector3.one * deathParameters.deathSize);
-                ocp.CmdSetPosition(new Vector3(-1 * spawnParameters.tileSize, spawnParameters.yOffset, spawnParameters.tileSize * 8) - _bounds
+                ocp.SetScale(Vector3.one * deathParameters.deathSize);
+                ocp.SetPosition(new Vector3(-1 * spawnParameters.tileSize, spawnParameters.yOffset, spawnParameters.tileSize * 8) - _bounds
                     + new Vector3(spawnParameters.tileSize / 2, 0, spawnParameters.tileSize / 2)
                     + (Vector3.back * deathParameters.deathSpacing) * deathParameters.deadBlacks.Count);
             }
@@ -283,6 +283,7 @@ public class ChessboardManager : NetworkBehaviour
 
         Mesh mesh = new();
         tileObject.AddComponent<MeshFilter>().mesh = mesh;
+        //tileObject.AddComponent<NetworkObject>();
         if ((x + y) % 2 == 0)
         {
             tileObject.AddComponent<MeshRenderer>().material = spawnParameters.blackTileMaterial;
@@ -390,7 +391,7 @@ public class ChessboardManager : NetworkBehaviour
         {
             yield return null;
         }
-        chessPieces[x, y].CmdSetPosition(GetTileCenter(x, y), force);
+        chessPieces[x, y].SetPosition(GetTileCenter(x, y), force);
 
     }
 
@@ -447,15 +448,15 @@ public class ChessboardManager : NetworkBehaviour
                 {
                     if (enemyPawn.piece == EPiece.King) { ChessManagers.Instance.GameManager.CmdCheckMate(ETeam.Black); }
                     deathParameters.deadWhites.Add(enemyPawn);
-                    enemyPawn.CmdSetScale(Vector3.one * deathParameters.deathSize);
-                    enemyPawn.CmdSetPosition(new Vector3(deathParameters.deathStartOffsetModifier * spawnParameters.tileSize, spawnParameters.yOffset * deathParameters.deathYOffsetModifier, -deathParameters.deathDistanceOffsetModifier * spawnParameters.tileSize) - _bounds + new Vector3(spawnParameters.tileSize / 2, 0, spawnParameters.tileSize / 2) + (Vector3.left * deathParameters.deathSpacing) * deathParameters.deadWhites.Count);
+                    enemyPawn.SetScale(Vector3.one * deathParameters.deathSize);
+                    enemyPawn.SetPosition(new Vector3(deathParameters.deathStartOffsetModifier * spawnParameters.tileSize, spawnParameters.yOffset * deathParameters.deathYOffsetModifier, -deathParameters.deathDistanceOffsetModifier * spawnParameters.tileSize) - _bounds + new Vector3(spawnParameters.tileSize / 2, 0, spawnParameters.tileSize / 2) + (Vector3.left * deathParameters.deathSpacing) * deathParameters.deadWhites.Count);
                 }
                 if (enemyPawn.team == ETeam.Black)
                 {
                     if (enemyPawn.piece == EPiece.King) { ChessManagers.Instance.GameManager.CmdCheckMate(ETeam.White); }
                     deathParameters.deadBlacks.Add(enemyPawn);
-                    enemyPawn.CmdSetScale(Vector3.one * deathParameters.deathSize);
-                    enemyPawn.CmdSetPosition(new Vector3(-(spawnParameters.tileSize + 1f), spawnParameters.yOffset * deathParameters.deathYOffsetModifier, spawnParameters.tileSize * (deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(spawnParameters.tileSize / 2, 0, spawnParameters.tileSize / 2) + (Vector3.right * deathParameters.deathSpacing) * deathParameters.deadBlacks.Count);
+                    enemyPawn.SetScale(Vector3.one * deathParameters.deathSize);
+                    enemyPawn.SetPosition(new Vector3(-(spawnParameters.tileSize + 1f), spawnParameters.yOffset * deathParameters.deathYOffsetModifier, spawnParameters.tileSize * (deathParameters.deathStartOffsetModifier + 1f)) - _bounds + new Vector3(spawnParameters.tileSize / 2, 0, spawnParameters.tileSize / 2) + (Vector3.right * deathParameters.deathSpacing) * deathParameters.deadBlacks.Count);
                 }
                 chessPieces[enemyPawn.currentX, enemyPawn.currentY] = null;
             }

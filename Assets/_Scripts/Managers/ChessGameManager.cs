@@ -72,11 +72,11 @@ public class ChessGameManager : NetworkBehaviour
         DisplayOpponentDisconnect(winner, true);
         RpcOnClientDisconnect(winner);
         DisconnectServerAfterDelay(5);
-        ReloadScene();
+        //ReloadScene();
     }
     public void ReloadScene()
     {
-        SceneLoadData sld = new("MainMenu")
+        SceneLoadData sld = new("OfflineScene")
         {
             ReplaceScenes = ReplaceOption.All
         };
@@ -146,7 +146,6 @@ public class ChessGameManager : NetworkBehaviour
     private async void DisconnectServerAfterDelay(int seconds)
     {
         await UniTask.Delay(seconds * 1000);
-        ChessManagers.Instance.ClientManager.CmdRemoveAllPlayers();
         ServerManager.StopConnection(false);
         DisplayOpponentDisconnect(ETeam.None, false);
     }

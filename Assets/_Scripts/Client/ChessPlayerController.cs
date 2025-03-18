@@ -1,4 +1,7 @@
+using FishNet.Component.Spawning;
 using FishNet.Object;
+using Newtonsoft.Json.Linq;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,7 +11,7 @@ public class ChessPlayerController : NetworkBehaviour
     #region VARS
     private ChessMatchPlayer _player;
     private ChessControls _chessControls;
-    private Camera _currentCamera;
+    public Camera currentCamera;
     private Vector2Int _currentHover;
     private ChessPiece _currentlyDragging;
     private const int TILE_COUNT_X = 8;
@@ -18,18 +21,43 @@ public class ChessPlayerController : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        if (!_currentCamera)
+        if (!currentCamera)
         {
-            _currentCamera = Camera.main;
-            //_currentCamera = _player.GetComponent<Camera>();
+            currentCamera = Camera.main;
         }
         _chessControls = new ChessControls();
         _player = GetComponent<ChessMatchPlayer>();
         _chessControls.Gameplay.Click.performed += OnClick;
         _chessControls.Gameplay.Enable();
-        _currentCamera.transform.position = transform.position;
-        _currentCamera.transform.rotation = transform.rotation;
+        if(IsOwner)StartCoroutine(DelayPositionCamera());
     }
+    private IEnumerator DelayPositionCamera()
+    {
+        if (!ChessManagers.Instance.GameManager.isGameStarted)
+        {
+            yield return null;
+        }
+        PositionCamera();
+    }
+    private void PositionCamera()
+    {
+        currentCamera.transform.SetParent(transform, false);
+
+        if (_player.team == ETeam.White)
+        {
+            //currentCamera.transform.SetParent(transform,false);
+            //GameObject whiteCamera = FindAnyObjectByType<WhitePlayerCamera>().gameObject;
+            //currentCamera.transform.position = whiteCamera.transform.position;
+            //currentCamera.transform.rotation = whiteCamera.transform.rotation;
+        }
+        else
+        {
+            //GameObject blackCamera = FindAnyObjectByType<BlackPlayerCamera>().gameObject;
+            //currentCamera.transform.position = blackCamera.transform.position;
+            //currentCamera.transform.rotation = blackCamera.transform.rotation;
+        }
+    }
+
     public override void OnStopClient()
     {
         base.OnStopClient();
@@ -47,8 +75,10 @@ public class ChessPlayerController : NetworkBehaviour
     #region LOCAL METHODS
     private void CheckHoverStatus()
     {
-        if ((ChessManagers.Instance.TurnManager.currentTurn != _player.team && !ChessManagers.Instance.GameManager.isLocalGame) || !ChessManagers.Instance.GameManager.isGameStarted) return;
-        Ray ray = _currentCamera.ScreenPointToRay(Input.mousePosition);
+        if ((ChessManagers.Instance.TurnManager.currentTurn != _player.team && 
+            !ChessManagers.Instance.GameManager.isLocalGame) ||
+            !ChessManagers.Instance.GameManager.isGameStarted) return;
+        Ray ray = currentCamera.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit info, 100, LayerMask.GetMask("Tile", "Hover", "Highlight")))
         {
             Vector2Int hitPosition = ChessManagers.Instance.BoardManager.LookupTileIndex(info.transform.gameObject);
@@ -79,12 +109,16 @@ public class ChessPlayerController : NetworkBehaviour
     private void OnClick(InputAction.CallbackContext obj)
     {
         if ((ChessManagers.Instance.TurnManager.currentTurn != _player.team && !ChessManagers.Instance.GameManager.isLocalGame) || !ChessManagers.Instance.GameManager.isGameStarted) return;
-        if (!_currentCamera) return;
+        if (!currentCamera) return;
         if (_currentHover != -Vector2Int.one)
         {
             if (_currentlyDragging == null)
             {
-                if (ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y] != null && (ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && ChessManagers.Instance.TurnManager.currentTurn == ETeam.White) || (ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && ChessManagers.Instance.TurnManager.currentTurn == ETeam.Black))
+                if (ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y] != null && 
+                    (ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y].team == ETeam.White && 
+                    ChessManagers.Instance.TurnManager.currentTurn == ETeam.White) || 
+                    (ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y].team == ETeam.Black && 
+                    ChessManagers.Instance.TurnManager.currentTurn == ETeam.Black))
                 {
                     _currentlyDragging = ChessManagers.Instance.BoardManager.chessPieces[_currentHover.x, _currentHover.y];
                     ChessManagers.Instance.BoardManager.CheckMoves(_currentlyDragging);
@@ -98,11 +132,11 @@ public class ChessPlayerController : NetworkBehaviour
                 bool validMove = ChessManagers.Instance.BoardManager.MoveTo(_currentlyDragging, _currentHover.x, _currentHover.y);
                 if (!validMove)
                 {
-                    _currentlyDragging.CmdSetPosition(ChessManagers.Instance.BoardManager.GetTileCenter(previousPosition.x, previousPosition.y));
+                    _currentlyDragging.SetPosition(ChessManagers.Instance.BoardManager.GetTileCenter(previousPosition.x, previousPosition.y));
                 }
                 else
                 {
-                    _currentlyDragging.CmdSetPosition(ChessManagers.Instance.BoardManager.GetTileCenter(_currentHover.x, _currentHover.y));
+                    _currentlyDragging.SetPosition(ChessManagers.Instance.BoardManager.GetTileCenter(_currentHover.x, _currentHover.y));
                 }
                 _currentlyDragging = null;
                 RemoveHighlightTiles();

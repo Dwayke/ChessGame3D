@@ -1206,6 +1206,74 @@ Transform:
   - {fileID: 725662677}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &400254927
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 400254928}
+  - component: {fileID: 400254929}
+  m_Layer: 0
+  m_Name: BoardManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &400254928
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400254927}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 479921411}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &400254929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400254927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61946a64c9ea83746acd77e601403f78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 479921414}
+  _networkObjectCache: {fileID: 0}
+  spawnParameters:
+    blackTileMaterial: {fileID: 2100000, guid: d4f44b1fe8ee9654f8883801a9ed897e, type: 2}
+    whiteTileMaterial: {fileID: 2100000, guid: 255ddda0f9e613b4a8a62adbee983548, type: 2}
+    tileSize: 1
+    boardCenter: {x: 0, y: -0.25, z: 0}
+    yOffset: 0
+  deathParameters:
+    deathStartOffsetModifier: 9
+    deathYOffsetModifier: 1.25
+    deathDistanceOffsetModifier: 3
+    deathSize: 0.85
+    deathSpacing: 0.6
+  _environment: {fileID: 373433752}
+  _board: {fileID: 1816793660}
+  _skins:
+    whitePlayerSkin: 1
+    blackPlayerSkin: 1
+    boardSkin: 0
+  _pieceSFX: {fileID: 725662676}
+  availableMoves: []
+  eSpecialMove: 0
 --- !u!1 &411009717
 GameObject:
   m_ObjectHideFlags: 0
@@ -1404,6 +1472,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 706435074}
+  - {fileID: 400254928}
   - {fileID: 298642593}
   - {fileID: 12198001}
   - {fileID: 1894755486}
@@ -1422,7 +1491,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GameManager: {fileID: 706435075}
-  BoardManager: {fileID: 0}
+  BoardManager: {fileID: 400254929}
   TurnManager: {fileID: 298642594}
   ClientManager: {fileID: 12198002}
   GameUI: {fileID: 1894755485}
@@ -1447,8 +1516,8 @@ MonoBehaviour:
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
   RuntimeChildNetworkBehaviours: []
-  _isNetworked: 0
-  _isSpawnable: 0
+  _isNetworked: 1
+  _isSpawnable: 1
   _isGlobal: 0
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
@@ -1696,7 +1765,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 706435075}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: OnExitButton
         m_Mode: 1
@@ -1787,40 +1856,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 706435073}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e83f0833c5adae448969f46f34ec773, type: 3}
+  m_Script: {fileID: 11500000, guid: 068d2ea2fd360564fa82d3a3bcf2e0ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 479921414}
   _networkObjectCache: {fileID: 0}
-  _spawnParameters:
-    blackTileMaterial: {fileID: 2100000, guid: d4f44b1fe8ee9654f8883801a9ed897e, type: 2}
-    whiteTileMaterial: {fileID: 2100000, guid: 255ddda0f9e613b4a8a62adbee983548, type: 2}
-    tileSize: 1
-    boardCenter: {x: 0, y: -0.195, z: 0}
-    yOffset: 0
-  _deathParameters:
-    deathStartOffsetModifier: 9
-    deathYOffsetModifier: 1.25
-    deathDistanceOffsetModifier: -1
-    deathSize: 0.85
-    deathSpacing: 0.6
-  dragYOffset: 1.5
   _victoryScreen: {fileID: 1352762143}
   _victoryText: {fileID: 72400707}
   _clientDisconnectScreen: {fileID: 785542581}
   _clientDisconnectText: {fileID: 86896508}
-  _environment: {fileID: 373433752}
-  _board: {fileID: 1816793660}
-  _skins:
-    whitePlayerSkin: 1
-    blackPlayerSkin: 1
-    boardSkin: 0
-  _pieceSFX: {fileID: 725662676}
   isGameStarted: 0
   isLocalGame: 1
-  _availableMoves: []
-  _eSpecialMove: 0
 --- !u!1 &725662675
 GameObject:
   m_ObjectHideFlags: 0
@@ -2615,7 +2662,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 706435075}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: OnExitButton
         m_Mode: 1
@@ -3019,6 +3066,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 880700454}
+  - component: {fileID: 880700455}
   m_Layer: 0
   m_Name: WhitePlayer
   m_TagString: Untagged
@@ -3041,6 +3089,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 57761239}
   m_LocalEulerAnglesHint: {x: 65, y: 180, z: 0}
+--- !u!114 &880700455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880700453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b30c5140d554cde4191352bc7014bf2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &881020409
 GameObject:
   m_ObjectHideFlags: 0
@@ -4320,6 +4380,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1456912944}
+  - component: {fileID: 1456912945}
   m_Layer: 0
   m_Name: BlackPlayer
   m_TagString: Untagged
@@ -4342,6 +4403,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 57761239}
   m_LocalEulerAnglesHint: {x: 65, y: 0, z: 0}
+--- !u!114 &1456912945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456912943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7f6844fb8187314792a846623a726fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1464156893 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2945135481426523700, guid: 19e08c4a49894fc43a19828debfc60c7, type: 3}
@@ -5024,7 +5097,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 706435075}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: OnResetButton
         m_Mode: 1
@@ -6177,7 +6250,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &7443408887068086441
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6194,7 +6267,7 @@ MonoBehaviour:
   _runInBackground: 1
   _dontDestroyOnLoad: 1
   _objectPool: {fileID: 0}
-  _persistence: 0
+  _persistence: 1
   _logging: {fileID: 0}
   _spawnablePrefabs: {fileID: 11400000, guid: 093f4e435fb133f4791bce0b36d92144, type: 2}
 --- !u!4 &7443408887068086442
@@ -6220,13 +6293,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7443408887068086440}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 57ce8bbb58966cb45a7140f32da5327a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _enableGlobalScenes: 1
-  _startInOffline: 1
+  _startInOffline: 0
   _offlineScene: Assets/_Scenes/OfflineScene.unity
   _onlineScene: Assets/_Scenes/OnlineScene.unity
   _replaceScenes: 0
